@@ -24,10 +24,9 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize audio service after frame is built
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    // Initialize state after frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        await context.read<AudioService>().initialize();
         setState(() {
           _isInitialized = true;
         });
@@ -36,6 +35,9 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
   }
 
   void _handleSwipeUp(BuildContext context) {
+    // Start background music when transitioning to next screen
+    context.read<AudioService>().startBackgroundMusic();
+    
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
@@ -59,142 +61,122 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
     );
   }
 
-  Future<void> _handleInteraction() async {
-    if (mounted && _isInitialized) {
-      debugPrint('Handling user interaction...');
-      await context.read<AudioService>().handleWebAudioStart();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<AudioService>(
       builder: (context, audioService, child) {
         return Material(
-          child: Focus(
-            autofocus: true,
-            onKey: (_, __) {
-              _handleInteraction();
-              return KeyEventResult.handled;
-            },
-            child: GestureDetector(
-              onTapDown: (_) => _handleInteraction(),
-              onTapUp: (_) => _handleInteraction(),
-              onTap: () => _handleInteraction(),
-              behavior: HitTestBehavior.opaque,
-              child: Scaffold(
-                body: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: AppColors.backgroundGradient,
+          child: Scaffold(
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: AppColors.backgroundGradient,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  // Raining hearts background
+                  const RainingHeartsBackground(),
+
+                  // Content
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Animated envelope
+                        AnimatedEnvelope(
+                          onSwipeUp: () => _handleSwipeUp(context),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // Animated welcome text
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            children: [
+                              DefaultTextStyle(
+                                style: GoogleFonts.dancingScript(
+                                  fontSize: 32,
+                                  color: AppColors.primaryPink,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      color: AppColors.primaryPink
+                                          .withOpacity(0.3),
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                child: AnimatedTextKit(
+                                  animatedTexts: [
+                                    TypewriterAnimatedText(
+                                      'knock knock.. Maprang!',
+                                      speed:
+                                          const Duration(milliseconds: 100),
+                                    ),
+                                  ],
+                                  repeatForever: false,
+                                  totalRepeatCount: 1,
+                                  displayFullTextOnTap: true,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              DefaultTextStyle(
+                                style: GoogleFonts.mali(
+                                  fontSize: 26,
+                                  color: AppColors.primaryRed,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.3,
+                                ),
+                                child: AnimatedTextKit(
+                                  animatedTexts: [
+                                    FadeAnimatedText(
+                                      'You\'ve received message\nfrom your Babeby',
+                                      duration: const Duration(seconds: 3),
+                                      fadeOutBegin: 0.8,
+                                      fadeInEnd: 0.2,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                  repeatForever: false,
+                                  totalRepeatCount: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Swipe up indicator
+                        const SizedBox(height: 40),
+                        Icon(
+                          Icons.keyboard_arrow_up,
+                          color: AppColors.primaryPink.withOpacity(0.6),
+                          size: 40,
+                        )
+                            .animate(
+                              onComplete: (controller) =>
+                                  controller.repeat(),
+                            )
+                            .moveY(
+                              duration: const Duration(seconds: 1),
+                              begin: 0,
+                              end: -20,
+                              curve: Curves.easeInOut,
+                            )
+                            .fadeOut(
+                              duration: const Duration(milliseconds: 500),
+                              delay: const Duration(milliseconds: 500),
+                            ),
+                      ],
                     ),
                   ),
-                  child: Stack(
-                    children: [
-                      // Raining hearts background
-                      const RainingHeartsBackground(),
-
-                      // Content
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Animated envelope
-                            AnimatedEnvelope(
-                              onSwipeUp: () => _handleSwipeUp(context),
-                            ),
-
-                            const SizedBox(height: 40),
-
-                            // Animated welcome text
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 24),
-                              child: Column(
-                                children: [
-                                  DefaultTextStyle(
-                                    style: GoogleFonts.dancingScript(
-                                      fontSize: 32,
-                                      color: AppColors.primaryPink,
-                                      fontWeight: FontWeight.bold,
-                                      shadows: [
-                                        Shadow(
-                                          color: AppColors.primaryPink
-                                              .withOpacity(0.3),
-                                          offset: const Offset(2, 2),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                    ),
-                                    child: AnimatedTextKit(
-                                      animatedTexts: [
-                                        TypewriterAnimatedText(
-                                          'knock knock.. Maprang!',
-                                          speed:
-                                              const Duration(milliseconds: 100),
-                                        ),
-                                      ],
-                                      repeatForever: false,
-                                      totalRepeatCount: 1,
-                                      displayFullTextOnTap: true,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  DefaultTextStyle(
-                                    style: GoogleFonts.mali(
-                                      fontSize: 26,
-                                      color: AppColors.primaryRed,
-                                      fontWeight: FontWeight.w600,
-                                      height: 1.3,
-                                    ),
-                                    child: AnimatedTextKit(
-                                      animatedTexts: [
-                                        FadeAnimatedText(
-                                          'You\'ve received message\nfrom your Babeby',
-                                          duration: const Duration(seconds: 3),
-                                          fadeOutBegin: 0.8,
-                                          fadeInEnd: 0.2,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                      repeatForever: false,
-                                      totalRepeatCount: 1,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Swipe up indicator
-                            const SizedBox(height: 40),
-                            Icon(
-                              Icons.keyboard_arrow_up,
-                              color: AppColors.primaryPink.withOpacity(0.6),
-                              size: 40,
-                            )
-                                .animate(
-                                  onComplete: (controller) =>
-                                      controller.repeat(),
-                                )
-                                .moveY(
-                                  duration: const Duration(seconds: 1),
-                                  begin: 0,
-                                  end: -20,
-                                  curve: Curves.easeInOut,
-                                )
-                                .fadeOut(
-                                  duration: const Duration(milliseconds: 500),
-                                  delay: const Duration(milliseconds: 500),
-                                ),
-                          ],
-                        ),
-                      ),
-                      const MuteButton(),
-                    ],
-                  ),
-                ),
+                  const MuteButton(),
+                ],
               ),
             ),
           ),

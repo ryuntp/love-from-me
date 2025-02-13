@@ -27,19 +27,13 @@ class AudioService extends ChangeNotifier {
         debugPrint('Audio player state changed: ${state.processingState}');
         if (state.processingState == ProcessingState.completed) {
           _player.seek(Duration.zero);
-          if (!kIsWeb || (kIsWeb && _hasUserInteracted && !_isMuted)) {
+          if (!_isMuted) {
             _player.play();
           }
         }
       });
 
       _isInitialized = true;
-
-      // Only autoplay on non-web platforms
-      if (!kIsWeb) {
-        await _player.play();
-      }
-
       notifyListeners();
     } catch (e) {
       debugPrint('Error initializing audio: $e');
@@ -47,32 +41,28 @@ class AudioService extends ChangeNotifier {
     }
   }
 
-  Future<void> handleWebAudioStart() async {
-    debugPrint('Handling web audio start...');
+  Future<void> startBackgroundMusic() async {
+    debugPrint('Starting background music...');
     if (!_isInitialized) {
       await initialize();
     }
 
-    if (kIsWeb) {
-      _hasUserInteracted = true;
-      if (!_isMuted) {
-        try {
-          debugPrint('Attempting to play audio...');
-          // First try to resume if already loaded
-          await _player.play().catchError((e) async {
-            debugPrint('Error playing audio, trying reload: $e');
-            // If failed, try reloading and playing
-            await _player.stop();
-            await _player.seek(Duration.zero);
-            await Future.delayed(const Duration(milliseconds: 100));
-            return _player.play();
-          }).catchError((e) {
-            debugPrint('Final error playing audio: $e');
-            return null;
-          });
-        } catch (e) {
-          debugPrint('Error in handleWebAudioStart: $e');
-        }
+    _hasUserInteracted = true;
+    if (!_isMuted) {
+      try {
+        debugPrint('Attempting to play audio...');
+        await _player.play().catchError((e) async {
+          debugPrint('Error playing audio, trying reload: $e');
+          await _player.stop();
+          await _player.seek(Duration.zero);
+          await Future.delayed(const Duration(milliseconds: 100));
+          return _player.play();
+        }).catchError((e) {
+          debugPrint('Final error playing audio: $e');
+          return null;
+        });
+      } catch (e) {
+        debugPrint('Error in startBackgroundMusic: $e');
       }
     }
   }
@@ -83,8 +73,8 @@ class AudioService extends ChangeNotifier {
       _player.setVolume(0);
     } else {
       _player.setVolume(0.5);
-      if (kIsWeb && _hasUserInteracted) {
-        handleWebAudioStart();
+      if (_hasUserInteracted) {
+        startBackgroundMusic();
       }
     }
     notifyListeners();
