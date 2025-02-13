@@ -1,54 +1,93 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
 
 class FallingHeart extends StatefulWidget {
   final double size;
   final Duration duration;
   final double startPosition;
+  final Duration initialDelay;
+  final double horizontalDrift;
+  final double initialY;
 
   const FallingHeart({
     super.key,
-    this.size = 24,
+    required this.size,
     required this.duration,
     required this.startPosition,
+    this.initialDelay = const Duration(),
+    this.horizontalDrift = 0,
+    this.initialY = 0,
   });
 
   @override
   State<FallingHeart> createState() => _FallingHeartState();
 }
 
-class _FallingHeartState extends State<FallingHeart> with SingleTickerProviderStateMixin {
+class _FallingHeartState extends State<FallingHeart>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  late double _horizontalPosition;
-  late double _rotationAngle;
+  late Animation<double> _horizontalAnimation;
+  bool _isDelayComplete = false;
+  double? _screenHeight;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final newScreenHeight = MediaQuery.of(context).size.height;
+    if (_screenHeight != newScreenHeight) {
+      _screenHeight = newScreenHeight;
+      _setupAnimations();
+    }
+  }
+
+  void _setupAnimations() {
+    if (!mounted) return;
+
+    _animation = Tween<double>(
+      begin: widget.initialY,
+      end: _screenHeight! + widget.size,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+
+    _horizontalAnimation = Tween<double>(
+      begin: 0,
+      end: widget.horizontalDrift,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
 
   @override
   void initState() {
     super.initState();
-    _horizontalPosition = widget.startPosition;
-    _rotationAngle = Random().nextDouble() * 0.5 - 0.25; // Random rotation between -0.25 and 0.25 radians
-
     _controller = AnimationController(
       duration: widget.duration,
       vsync: this,
     );
 
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.linear,
-    );
-
-    _controller.forward();
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
+    if (widget.initialDelay == Duration.zero) {
+      _isDelayComplete = true;
+      _startAnimation();
+    } else {
+      Future.delayed(widget.initialDelay, () {
         if (mounted) {
-          _controller.reset();
-          _controller.forward();
+          setState(() {
+            _isDelayComplete = true;
+          });
+          _startAnimation();
         }
-      }
-    });
+      });
+    }
+  }
+
+  void _startAnimation() {
+    if (mounted && _screenHeight != null) {
+      _controller.repeat();
+    }
   }
 
   @override
@@ -59,22 +98,24 @@ class _FallingHeartState extends State<FallingHeart> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    if (!_isDelayComplete) return const SizedBox.shrink();
+
     return AnimatedBuilder(
-      animation: _animation,
+      animation: _controller,
       builder: (context, child) {
         return Positioned(
-          left: _horizontalPosition,
-          top: -widget.size + (MediaQuery.of(context).size.height + widget.size) * _animation.value,
+          left: widget.startPosition + (_horizontalAnimation.value),
+          top: _animation.value,
           child: Transform.rotate(
-            angle: _rotationAngle * sin(_animation.value * 4 * pi),
+            angle: sin(_controller.value * pi * 2) * 0.2,
             child: Icon(
               Icons.favorite,
-              color: AppColors.primaryPink.withOpacity(0.3),
               size: widget.size,
+              color: Colors.pink.withOpacity(0.8),
             ),
           ),
         );
       },
     );
   }
-} 
+}

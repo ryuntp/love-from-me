@@ -33,14 +33,16 @@ class HeartShapedImage extends StatelessWidget {
           fit: BoxFit.cover,
         ),
       ),
-    ).animate(
-      onPlay: (controller) => controller.repeat(reverse: true),
-    ).scale(
-      duration: const Duration(seconds: 2),
-      begin: const Offset(1, 1),
-      end: const Offset(1.05, 1.05),
-      curve: Curves.easeInOut,
-    );
+    )
+        .animate(
+          onPlay: (controller) => controller.repeat(reverse: true),
+        )
+        .scale(
+          duration: const Duration(seconds: 2),
+          begin: const Offset(1, 1),
+          end: const Offset(1.05, 1.05),
+          curve: Curves.easeInOut,
+        );
   }
 }
 
@@ -55,41 +57,41 @@ class HeartClipper extends CustomClipper<Path> {
 
     // Left top curve
     path.cubicTo(
-      0.2 * width,  // First control point
+      0.2 * width, // First control point
       0.1 * height,
-      0.075 * width,  // Second control point
+      0.075 * width, // Second control point
       0.35 * height,
-      0.15 * width,  // End point
+      0.15 * width, // End point
       0.45 * height,
     );
 
     // Left bottom curve
     path.cubicTo(
-      0.25 * width,  // First control point
+      0.25 * width, // First control point
       0.6 * height,
-      0.35 * width,  // Second control point
+      0.35 * width, // Second control point
       0.75 * height,
-      0.5 * width,  // End point
+      0.5 * width, // End point
       0.9 * height,
     );
 
     // Right bottom curve
     path.cubicTo(
-      0.65 * width,  // First control point
+      0.65 * width, // First control point
       0.75 * height,
-      0.75 * width,  // Second control point
+      0.75 * width, // Second control point
       0.6 * height,
-      0.85 * width,  // End point
+      0.85 * width, // End point
       0.45 * height,
     );
 
     // Right top curve
     path.cubicTo(
-      0.925 * width,  // First control point
+      0.925 * width, // First control point
       0.35 * height,
-      0.8 * width,  // Second control point
+      0.8 * width, // Second control point
       0.1 * height,
-      0.5 * width,  // End point
+      0.5 * width, // End point
       0.35 * height,
     );
 
@@ -99,4 +101,4 @@ class HeartClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-} 
+}

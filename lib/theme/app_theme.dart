@@ -13,7 +13,7 @@ class AppTheme {
         surface: AppColors.white,
         error: AppColors.accentRed,
       ),
-      
+
       // Text Theme
       textTheme: TextTheme(
         displayLarge: GoogleFonts.dancingScript(
@@ -37,7 +37,7 @@ class AppTheme {
           color: AppColors.textSecondary,
         ),
       ),
-      
+
       // Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -49,7 +49,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // Card Theme
       cardTheme: CardTheme(
         color: AppColors.white,
@@ -93,4 +93,4 @@ class AppTheme {
       ),
     );
   }
-} 
+}

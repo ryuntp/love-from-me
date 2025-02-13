@@ -15,7 +15,8 @@ class AnimatedEnvelope extends StatefulWidget {
   State<AnimatedEnvelope> createState() => _AnimatedEnvelopeState();
 }
 
-class _AnimatedEnvelopeState extends State<AnimatedEnvelope> with SingleTickerProviderStateMixin {
+class _AnimatedEnvelopeState extends State<AnimatedEnvelope>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _floatAnimation;
   late Animation<double> _openAnimation;
@@ -64,11 +65,11 @@ class _AnimatedEnvelopeState extends State<AnimatedEnvelope> with SingleTickerPr
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (!_isPressed || _isOpening) return;
-    
+
     setState(() {
       _rotateX += details.delta.dy * 0.01;
       _rotateY += details.delta.dx * 0.01;
-      
+
       // Clamp rotation values
       _rotateX = _rotateX.clamp(-0.5, 0.5);
       _rotateY = _rotateY.clamp(-0.5, 0.5);
@@ -107,7 +108,7 @@ class _AnimatedEnvelopeState extends State<AnimatedEnvelope> with SingleTickerPr
       onVerticalDragUpdate: (details) {
         final currentY = details.globalPosition.dy;
         final dragDistance = _dragStartY - currentY;
-        
+
         // If dragged up more than 50 logical pixels, trigger the animation
         if (dragDistance > 50) {
           _startOpenAnimation();
@@ -127,7 +128,12 @@ class _AnimatedEnvelopeState extends State<AnimatedEnvelope> with SingleTickerPr
               ..setEntry(3, 2, 0.001)
               ..rotateX(_rotateX)
               ..rotateY(_rotateY)
-              ..translate(0.0, _isOpening ? -100.0 * _openAnimation.value : _floatAnimation.value, 0.0),
+              ..translate(
+                  0.0,
+                  _isOpening
+                      ? -100.0 * _openAnimation.value
+                      : _floatAnimation.value,
+                  0.0),
             alignment: Alignment.center,
             child: Stack(
               children: [
@@ -155,10 +161,11 @@ class _AnimatedEnvelopeState extends State<AnimatedEnvelope> with SingleTickerPr
                     ),
                   ),
                   child: CustomPaint(
-                    painter: EnvelopePainter(openProgress: _isOpening ? _openAnimation.value : 0),
+                    painter: EnvelopePainter(
+                        openProgress: _isOpening ? _openAnimation.value : 0),
                   ),
                 ),
-                
+
                 // Sparkles
                 if (_isPressed && !_isOpening)
                   ...List.generate(8, (index) {
@@ -202,7 +209,7 @@ class EnvelopePainter extends CustomPainter {
     final flapPath = Path();
     final midX = size.width / 2;
     final midY = size.height / 2;
-    
+
     if (openProgress == 0) {
       flapPath.moveTo(0, 0);
       flapPath.lineTo(midX, midY);
@@ -225,14 +232,20 @@ class EnvelopePainter extends CustomPainter {
 
       heartPath.moveTo(centerX, centerY + heartSize * 0.3);
       heartPath.cubicTo(
-        centerX - heartSize, centerY - heartSize * 0.5,
-        centerX - heartSize, centerY - heartSize * 1.5,
-        centerX, centerY - heartSize * 0.5,
+        centerX - heartSize,
+        centerY - heartSize * 0.5,
+        centerX - heartSize,
+        centerY - heartSize * 1.5,
+        centerX,
+        centerY - heartSize * 0.5,
       );
       heartPath.cubicTo(
-        centerX + heartSize, centerY - heartSize * 1.5,
-        centerX + heartSize, centerY - heartSize * 0.5,
-        centerX, centerY + heartSize * 0.3,
+        centerX + heartSize,
+        centerY - heartSize * 1.5,
+        centerX + heartSize,
+        centerY - heartSize * 0.5,
+        centerX,
+        centerY + heartSize * 0.3,
       );
 
       canvas.drawPath(
@@ -245,6 +258,6 @@ class EnvelopePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant EnvelopePainter oldDelegate) => 
-    oldDelegate.openProgress != openProgress;
-} 
+  bool shouldRepaint(covariant EnvelopePainter oldDelegate) =>
+      oldDelegate.openProgress != openProgress;
+}

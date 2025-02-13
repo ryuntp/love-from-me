@@ -9,7 +9,8 @@ class SparkleEffect extends StatefulWidget {
   State<SparkleEffect> createState() => _SparkleEffectState();
 }
 
-class _SparkleEffectState extends State<SparkleEffect> with SingleTickerProviderStateMixin {
+class _SparkleEffectState extends State<SparkleEffect>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -93,7 +94,7 @@ class SparklePainter extends CustomPainter {
         center.dx + cos(angle + pi / 8) * radius * 0.4,
         center.dy + sin(angle + pi / 8) * radius * 0.4,
       );
-      
+
       if (i == 0) {
         path.moveTo(point.dx, point.dy);
       } else {
@@ -108,4 +109,4 @@ class SparklePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-} 
+}

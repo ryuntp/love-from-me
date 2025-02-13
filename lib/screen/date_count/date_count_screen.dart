@@ -114,9 +114,10 @@ class _DateCountScreenState extends State<DateCountScreen> {
                 onPressed: () {
                   Navigator.of(context).push(
                     PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => 
-                        const ThaiPoemScreen(),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          const ThaiPoemScreen(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
                         const begin = Offset(1.0, 0.0);
                         const end = Offset.zero;
                         const curve = Curves.easeInOutCubic;
@@ -135,7 +136,8 @@ class _DateCountScreenState extends State<DateCountScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   backgroundColor: AppColors.primaryPink,
                   foregroundColor: AppColors.white,
                   shape: RoundedRectangleBorder(
@@ -220,4 +222,4 @@ class _DateCountScreenState extends State<DateCountScreen> {
       ),
     );
   }
-} 
+}

@@ -154,7 +154,8 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryPink.withOpacity(0.8),
                       foregroundColor: AppColors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -171,12 +172,13 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
                 ],
               ),
             ),
-          ).animate()
-            .scale(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOutBack,
-            )
-            .fadeIn(duration: const Duration(milliseconds: 500)),
+          )
+              .animate()
+              .scale(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutBack,
+              )
+              .fadeIn(duration: const Duration(milliseconds: 500)),
         );
       },
     );
@@ -200,7 +202,7 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
           children: [
             // Background effects
             const RainingHeartsBackground(numberOfHearts: 15),
-            
+
             // Main content
             SafeArea(
               child: Column(
@@ -209,7 +211,7 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
                   Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Text(
-                      'กลอนรัก',
+                      'กลอนแปรดที่เทอว์ข๋อ',
                       style: GoogleFonts.mali(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
@@ -276,20 +278,23 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
                           ],
                         ),
                         child: Text(
-                          'Click me! 💝',
+                          'กดดิ แล้วจะยิ้มกว้างกว่าเดิม 💝',
                           style: GoogleFonts.mali(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: AppColors.primaryPink,
                           ),
                         ),
-                      ).animate(
-                        onPlay: (controller) => controller.repeat(reverse: true),
-                      ).scale(
-                        duration: const Duration(seconds: 1),
-                        begin: const Offset(1, 1),
-                        end: const Offset(1.1, 1.1),
-                      ),
+                      )
+                          .animate(
+                            onPlay: (controller) =>
+                                controller.repeat(reverse: true),
+                          )
+                          .scale(
+                            duration: const Duration(seconds: 1),
+                            begin: const Offset(1, 1),
+                            end: const Offset(1.1, 1.1),
+                          ),
                     ),
                   ),
                 ),
@@ -323,7 +328,7 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
           children: [
             // Decorative corners
             ..._buildCornerDecorations(),
-            
+
             // Poem content
             Center(
               child: Padding(
@@ -351,14 +356,16 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
             ),
           ],
         ),
-      ).animate(
-        onPlay: (controller) => controller.repeat(reverse: true),
-      ).scale(
-        duration: const Duration(seconds: 3),
-        begin: const Offset(1, 1),
-        end: const Offset(1.02, 1.02),
-        curve: Curves.easeInOut,
-      ),
+      )
+          .animate(
+            onPlay: (controller) => controller.repeat(reverse: true),
+          )
+          .scale(
+            duration: const Duration(seconds: 3),
+            begin: const Offset(1, 1),
+            end: const Offset(1.02, 1.02),
+            curve: Curves.easeInOut,
+          ),
     );
   }
 
@@ -392,14 +399,16 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
       Icons.favorite,
       color: AppColors.primaryPink.withOpacity(0.3),
       size: 30,
-    ).animate(
-      onPlay: (controller) => controller.repeat(reverse: true),
-    ).scale(
-      duration: const Duration(seconds: 2),
-      begin: const Offset(1, 1),
-      end: const Offset(1.3, 1.3),
-      curve: Curves.easeInOut,
-    );
+    )
+        .animate(
+          onPlay: (controller) => controller.repeat(reverse: true),
+        )
+        .scale(
+          duration: const Duration(seconds: 2),
+          begin: const Offset(1, 1),
+          end: const Offset(1.3, 1.3),
+          curve: Curves.easeInOut,
+        );
   }
 
   Widget _buildDot(int index) {
@@ -413,12 +422,14 @@ class _ThaiPoemScreenState extends State<ThaiPoemScreen> {
             ? AppColors.primaryPink
             : AppColors.primaryPink.withOpacity(0.3),
       ),
-    ).animate(
-      target: _currentPage == index ? 1 : 0,
-    ).scale(
-      duration: const Duration(milliseconds: 300),
-      begin: const Offset(1, 1),
-      end: const Offset(1.3, 1.3),
-    );
+    )
+        .animate(
+          target: _currentPage == index ? 1 : 0,
+        )
+        .scale(
+          duration: const Duration(milliseconds: 300),
+          begin: const Offset(1, 1),
+          end: const Offset(1.3, 1.3),
+        );
   }
-} 
+}
