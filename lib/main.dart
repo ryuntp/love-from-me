@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'common/services/audio_service.dart';
 import 'screen/envelope/envelope_screen.dart';
 import 'theme/app_theme.dart';
+import 'screen/splash/splash_screen.dart';
+import 'theme/app_colors.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,15 +15,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AudioService()),
-      ],
+    return ChangeNotifierProvider(
+      create: (_) => AudioService(),
       child: MaterialApp(
-        title: "Babeby V's day",
-        theme: AppTheme.lightTheme,
+        title: 'Love From Me',
         debugShowCheckedModeBanner: false,
-        home: const EnvelopeScreen(),
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primaryPink),
+          useMaterial3: true,
+        ),
+        home: const SplashScreen(),
       ),
     );
   }
