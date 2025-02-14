@@ -3,10 +3,10 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "ed21f020ab3360e64ad43a4d8cb89da5",
+const RESOURCES = {"flutter_bootstrap.js": "3dfb20c793511b62f0569572982554d2",
 "version.json": "e22412a378a79eec357dbb8bebc2354a",
-"index.html": "c135a9f68a9d4520bf9a0834f1cf88de",
-"/": "c135a9f68a9d4520bf9a0834f1cf88de",
+"index.html": "41223d746fa772bff1442461f12210c5",
+"/": "41223d746fa772bff1442461f12210c5",
 "main.dart.js": "ffde82a6c98a8c3bd08d2cd76b01bbdd",
 "flutter.js": "4b2350e14c6650ba82871f60906437ea",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
@@ -29,7 +29,7 @@ const RESOURCES = {"flutter_bootstrap.js": "ed21f020ab3360e64ad43a4d8cb89da5",
 "assets/assets/audio/schatze-und-ehre-gott-jeden-tag_loop-180228.mp3": "ea5a19e8ca26e553d56845d936f6e07b",
 "assets/assets/fonts/Mali-Light.ttf": "36f24f14db1ab563f946fce4a2b56e49",
 "assets/assets/fonts/Mali-Regular.ttf": "ad891d81fc2721357424ee98074d411f",
-"assets/assets/fonts/MaterialIcons-Regular.otf": "4a1a99b6a1285aeedae1d17f3decf585",
+"assets/assets/fonts/MaterialIcons-Regular.otf": "7cbd3840860135d65dfcaff829f79cf4",
 "assets/assets/fonts/Mali-Bold.ttf": "18983c725f84f9cfc5397b08d890a028",
 "canvaskit/skwasm.js": "ac0f73826b925320a1e9b0d3fd7da61c",
 "canvaskit/skwasm.js.symbols": "96263e00e3c9bd9cd878ead867c04f3c",
