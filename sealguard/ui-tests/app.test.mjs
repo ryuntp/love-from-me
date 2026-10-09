@@ -413,7 +413,7 @@ test('advance: host times over five minutes ahead of the page clock are rejected
 	assert.equal(bootClock.world.link.lastError, 'events[0].startedAt must not be before 2024');
 	const ahead = advance(w, { kind: 'events', events: [recordedEvent({ id: 'c1' }), recordedEvent({ id: 'c2', startedAt: T0 + DAY })] }, T0);
 	assert.equal(ahead.world.link.lastError, 'events[1].startedAt must not be over five minutes ahead');
-	assert.deepEqual(ahead.world.events, []);
+	assert.deepEqual(ahead.world.events.map((e) => e.id), ['c1'], 'the event with a good stamp stays');
 	assert.equal(advance(w, { kind: 'events', events: [recordedEvent({ id: 'c1', endedAt: T0 + DAY })] }, T0).world.link.lastError, 'events[0].endedAt must not be over five minutes ahead');
 	assert.equal(advance(w, { kind: 'events', events: [recordedEvent({ startedAt: Date.UTC(2024, 0, 1) })] }, T0).world.link.rejected, 0, 'the first day of 2024 is a time');
 });
@@ -534,4 +534,35 @@ test('property: through advance, stale and replayed host inputs never arm a movi
 			w = r.world;
 		}
 	}
+});
+
+test('advance: a live sample older than the history means the clock stepped back, so the later stamped samples go and sentry still sees the car drive', () => {
+	const armed = armedWorld();
+	assert.equal(armed.sentry.mode, 'armed');
+	const back = T0 - HOUR;
+	const driving = advance(armed, { kind: 'vehicle', snapshot: snapshot({ at: back, power: 'on', locked: false }) }, back);
+	assert.equal(driving.world.sentry.mode, 'driving');
+	assert.equal(driving.world.history.latest.at, back);
+	assert.ok(driving.world.history.kept.every((s) => s.at <= back), 'samples the old clock stamped later are gone');
+	assert.ok(driving.effects.some((e) => e.kind === 'stopWatch'), 'the watch is stopped');
+	const stale = advance(armed, { kind: 'vehicle', snapshot: snapshot({ at: back, power: 'on', locked: false }) }, T0 + 10 * MINUTE);
+	assert.equal(stale.world.sentry.mode, 'armed', 'a replayed sample far from the page clock is still refused');
+	assert.equal(stale.world.history, armed.history);
+	const loaded = initialWorld(defaults, record(EMPTY_HISTORY, snapshot({ at: T0 })));
+	const afterStatus = advance(loaded, { kind: 'status', status: hostStatus() }, back).world;
+	const decided = advance(afterStatus, { kind: 'vehicle', snapshot: snapshot({ at: back }) }, back).world;
+	assert.notEqual(decided.sentry.mode, 'starting', 'a reload after the clock stepped back still decides');
+});
+
+test('advance: an events index with one event stamped by an unsynced clock keeps the others and counts the bad one', () => {
+	const w = armedWorld();
+	const bad = recordedEvent({ startedAt: 3600000 });
+	const good = recordedEvent({ startedAt: T0 - 2 * HOUR });
+	const next = advance(w, { kind: 'events', events: [bad, good] }, T0);
+	assert.deepEqual(next.world.events.map((e) => e.id), [good.id]);
+	assert.equal(next.world.link.rejected, 1);
+	assert.equal(next.world.link.lastError, 'events[0].startedAt must not be before 2024');
+	assert.ok(!next.effects.some((e) => e.kind === 'deleteEvents'), 'the bad stamp triggers no deletion');
+	const clean = advance(w, { kind: 'events', events: [good] }, T0);
+	assert.equal(clean.world.link.rejected, 0);
 });

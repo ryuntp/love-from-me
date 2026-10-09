@@ -1,7 +1,7 @@
 // The hub: World and the one function that replaces it. advance routes each input to its owning module, seals the incident
 // pack when a clip closes, and diffs the time-lapse plan against the last lapse command, so "what can change X" has one answer.
 import { parseConfig } from './config.js';
-import { record } from './telemetry.js';
+import { record, rewind, newestAt } from './telemetry.js';
 import { INITIAL_SENTRY, step } from './sentry.js';
 import { runtimeBudget, lapsePlan } from './parking.js';
 import { incidentPack, expiredEvents } from './recordings.js';
@@ -105,22 +105,36 @@ function clockFault(input, now) {
 		return (s.watch !== null ? tooFarAhead('watch.since', s.watch.since, now) : null)
 			|| (s.recording !== null ? tooFarAhead('recording.startedAt', s.recording.startedAt, now) || tooFarAhead('recording.lastSeenAt', s.recording.lastSeenAt, now) : null);
 	}
-	if (input.kind === 'events') {
-		for (let i = 0; i < input.events.length; i++) {
-			const e = input.events[i];
-			const path = 'events[' + i + ']';
-			if (e.startedAt < EPOCH_MS) return path + '.startedAt must not be before 2024';
-			const fault = tooFarAhead(path + '.startedAt', e.startedAt, now) || tooFarAhead(path + '.endedAt', e.endedAt, now);
-			if (fault !== null) return fault;
-		}
-	}
 	return null;
 }
-/** The input the hub runs: a host time the page clock cannot accept becomes a rejected input, and a detection stamped a little ahead is read as now. */
+function eventFault(e, i, now) {
+	const path = 'events[' + i + ']';
+	if (e.startedAt < EPOCH_MS) return path + '.startedAt must not be before 2024';
+	return tooFarAhead(path + '.startedAt', e.startedAt, now) || tooFarAhead(path + '.endedAt', e.endedAt, now);
+}
+/** The input the hub runs, and the fault to count. A host time the page clock cannot accept makes the whole input rejected, except in an events index, where only the offending events are dropped so one clip stamped by an unsynced clock cannot freeze the timeline. A detection stamped a little ahead is read as now. */
 function gated(input, now) {
+	if (input.kind === 'events') {
+		const faults = [];
+		const events = input.events.filter(function (e, i) {
+			const fault = eventFault(e, i, now);
+			if (fault !== null) faults.push(fault);
+			return fault === null;
+		});
+		if (faults.length === 0) return { input: input, fault: null };
+		return { input: { kind: 'events', events: events }, fault: faults[0] + (faults.length > 1 ? ' and ' + (faults.length - 1) + ' more' : '') };
+	}
 	const fault = clockFault(input, now);
-	if (fault !== null) return { kind: 'rejected', reason: fault };
-	return input.kind === 'detection' && input.at > now ? Object.assign({}, input, { at: now }) : input;
+	if (fault !== null) return { input: { kind: 'rejected', reason: fault }, fault: null };
+	return { input: input.kind === 'detection' && input.at > now ? Object.assign({}, input, { at: now }) : input, fault: null };
+}
+/** The device clock stepped back when the page clock itself sits more than the tolerance behind the newest sample the history holds. A live sample, one stamped within the tolerance of now, then has the samples the old clock stamped after it dropped, so it is accepted and sentry sees the car. A sample merely delayed, with the page clock at or past the history, is left for the history to refuse. */
+function rewoundFor(history, input, now) {
+	if (input.kind !== 'vehicle') return history;
+	const at = input.snapshot.at;
+	const newest = newestAt(history);
+	if (newest === null || at > newest || newest - now <= AHEAD_MS || Math.abs(at - now) > AHEAD_MS) return history;
+	return rewind(history, at);
 }
 
 /** The time-lapse plan for this World, the one the dashboard shows and the hub sends: off with the reason outside the parked modes, else the band the runtime budget allows, keeping the band already running for this park. @param {World} world @param {Millis} now @returns {LapsePlan} */
@@ -139,15 +153,19 @@ function sameLapse(a, b) { return a === b || (a !== null && b !== null && a.sess
 
 /** The only writer of World: routes one input to its owning module, turns clipClosed into saveEvent with the pack, diffs the lapse plan against world.lapse, and returns the next World and the effects to run. @param {World} world @param {Input} input @param {Millis} now @returns {{world: World, effects: Effect[]}} */
 export function advance(world, input, now) {
-	const accepted = gated(input, now);
+	const gate = gated(input, now);
+	const accepted = gate.input;
+	const history = rewoundFor(world.history, accepted, now);
+	const base = history === world.history ? world : with_(world, { history: history });
 	const route = Object.prototype.hasOwnProperty.call(ROUTES, accepted.kind) ? ROUTES[accepted.kind] : null;
-	const routed = route === null ? { world: world, effects: [] } : route(world, accepted, now);
+	const routed = route === null ? { world: base, effects: [] } : route(base, accepted, now);
 	let next = routed.world;
 	let effects = routed.effects;
 	if (HOST_INPUTS.indexOf(accepted.kind) >= 0) {
 		const stamps = { heardAt: now };
 		if (accepted.kind === 'status' && next.link.statusAt === null) stamps.statusAt = now;
 		if (accepted.kind === 'vehicle') stamps.vehicleAt = now;
+		if (gate.fault !== null) { stamps.rejected = next.link.rejected + 1; stamps.lastError = gate.fault; }
 		next = withLink(next, stamps);
 	}
 	// A snapshot history refused as out of order never reaches sentry, or a delayed parked sample could arm the car while it drives.

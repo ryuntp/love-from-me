@@ -44,6 +44,21 @@ export function record(history, snapshot) {
 	return { latest: snapshot, recent: recent, kept: kept };
 }
 
+/** The history with every sample stamped at or after at removed. For a device clock that stepped back, the samples the old clock stamped later are the ones that can no longer be ordered. @param {History} history @param {Millis} at @returns {History} */
+export function rewind(history, at) {
+	const before = function (s) { return s.at < at; };
+	const recent = history.recent.filter(before);
+	const kept = history.kept.filter(before);
+	const latest = recent.length ? recent[recent.length - 1] : kept.length ? kept[kept.length - 1] : null;
+	return { latest: latest, recent: recent, kept: kept };
+}
+/** The newest stamp the history holds, or null. @param {History} history @returns {Millis|null} */
+export function newestAt(history) {
+	const lastKept = history.kept.length ? history.kept[history.kept.length - 1].at : null;
+	if (history.latest === null) return lastKept;
+	return lastKept === null ? history.latest.at : Math.max(history.latest.at, lastKept);
+}
+
 /** Snapshots at or after from, kept and recent merged in time order. @param {History} history @param {Millis} from @returns {VehicleSnapshot[]} */
 export function since(history, from) {
 	const recent = history.recent;
