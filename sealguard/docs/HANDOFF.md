@@ -4,17 +4,18 @@ This note lets a fresh session resume the work without the transcript. Update it
 
 ## Where things stand
 
-- Branch: `claude/byd-seal-sentry-cameras-b3mi55` on `ryuntp/love-from-me`. Everything below `sealguard/` is the car app; the rest of the repo is an unrelated Flutter site.
-- Toolchain: `sealguard/tools/bootstrap-toolchain.sh` then `tools/build-apk.sh` and `tools/run-tests.sh`. Verified end to end on a probe APK in this sandbox.
-- Research: reports under the session scratchpad `research/` directory are not committed. The conclusions that matter are summarized in `docs/FRAMING.md` and will be summarized in `docs/PLATFORM.md` once the synthesis is read.
+- Branch: `claude/gracious-mayer-ddszx3` on `ryuntp/love-from-me`, a fast-forward of `claude/byd-seal-sentry-cameras-b3mi55`. Everything below `sealguard/` is the car app; the rest of the repo is an unrelated Flutter site.
+- Scope of this session: the owner-facing UI in the iOS design language and the owner-value features, built against a simulated vehicle feed. The native vehicle link (cameras, power, signals) is deferred; the host answers the page with an honest "no vehicle link" status.
+- Toolchain: `tools/bootstrap-toolchain.sh`, then `tools/run-tests.sh`, `tools/build-apk.sh`, `tools/screenshot-ui.sh`. All four verified in this sandbox. A signed APK with the WebView host, the bridge and the launcher icon builds.
+- Design: `docs/ARCHITECTURE.md` is the design package from a three-candidate arena plus a cross-judge. `docs/SKETCH.md` is the implementation contract and is deleted once the modules carry the shapes.
+- Landed: `app/assets/ui/config.js` (the FIELDS settings table, total parser, one-key persistence) and `format.js`, with tests.
+- In flight: workstream W0 (host, telemetry, sentry, parking, battery, tyres, recordings, main, app, sim, their tests, conformance test) and workstream W1 (tokens.css, app.css, ui.js, boot.js, screens, index.html, screens test). The briefs are in the session scratchpad and are summarized by SKETCH.md.
 - Decisions: `docs/decisions.tsv`, append-only.
 
 ## Next step
 
-Read the research synthesis, run the design arena (lean port vs companion app on OverDrive's daemon vs fork), then implement in the order: scaffold and diagnostics, camera and power port, sentry, extras, UI.
+When W0 and W1 land: run `tools/run-tests.sh` and `tools/screenshot-ui.sh`, look at every screenshot, fix the glue between the two halves, add a visible "Demo data" marker to the page when it runs on the simulator, run an adversarial review with correctness and platform lenses, delete `docs/SKETCH.md`, update this note and the decision log, commit in verified units and push.
 
-## Prior art to keep open while coding
+## Deferred
 
-- OverDrive (MIT): `github.com/yash-srivastava/Overdrive-release`. Camera open choreography in `app/src/main/java/com/overdrive/app/camera/PanoramicCameraGpu.java`, rail holds in `daemon/AccSentryDaemon.java`, daemon launch in `launcher/DaemonLauncher.kt`.
-- BYD Extend (camera overlays): `github.com/hfagelnour/byd-turnsignal-cameraview`.
-- Dolphin reverse engineering: `github.com/wheregoes/byd-dolphin-hacking`.
+The native vehicle link. `docs/FRAMING.md` items 3 and 4 describe it and name the prior art to read when that work resumes. It is verified only on the car, through the Diagnostics screen.
