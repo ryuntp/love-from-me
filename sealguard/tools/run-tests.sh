@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
-# Compiles app/src/main plus app/src/test against android.jar and runs every *Test class with JUnit 4.
-# Tests cover the pure-Kotlin domain logic; android.jar classes throw "Stub!" if touched at runtime.
+# Runs the UI unit tests (node --test over ui-tests/) and, when app/src/test exists, compiles app/src/main plus
+# app/src/test against android.jar and runs every *Test class with JUnit 4. Android classes throw "Stub!" if touched.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+echo "[ui] node --test"
+node --test "$ROOT"/ui-tests/*.test.mjs
+
+if [ ! -d "$ROOT/app/src/test" ]; then
+	echo "[kotlin] no app/src/test directory, skipping"
+	exit 0
+fi
+echo "[kotlin] junit"
 TOOLCHAIN="${SEALGUARD_TOOLCHAIN:-$HOME/.cache/sealguard-toolchain}"
 # shellcheck disable=SC1091
 source "$TOOLCHAIN/env.sh"
