@@ -32,6 +32,8 @@ Scenarios are `night`, `prowler`, `leak`, `healthy` and `charging`. `speed` is v
 2. Open SealGuard and follow the onboarding. The second page asks you to allow the app to start on its own in the car's settings; the car turns that off again after every install.
 3. Choose the arming rule. "When locked" is the default.
 
+To update the app later, build with the same signing key. `tools/bootstrap-toolchain.sh` creates a debug key per machine; an APK signed with another key needs an uninstall, which erases the settings and the history.
+
 ## Layout
 
 - `app/` the Android host: `AndroidManifest.xml`, `src/main/app/sealguard/` (the activity and the bridge), `res/`, `assets/ui/` (the page).

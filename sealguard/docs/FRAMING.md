@@ -18,7 +18,7 @@ Items 3 and 4 cannot be verified in this sandbox. They are verified by porting t
 
 ## Scope, quantified
 
-Roughly: helper daemon and camera port (2k lines Kotlin), sentry state machine and recorder (1.5k), vehicle signals (0.8k), extras (1.5k), UI (HTML/CSS/JS or Views, 2.5k), docs and tests (1.5k). One to two sessions of work if nothing surprises us. The toolchain, the research and the design arena come first because every later unit depends on them.
+Roughly: helper daemon and camera port (2k lines Kotlin), sentry state machine and recorder (1.5k), vehicle signals (0.8k), extras (1.5k), UI (HTML/CSS/JS or Views, 2.5k), docs and tests (1.5k). Revised in the design arena: the sentry policy, the floors and the extras run in the page as JavaScript, so the sandbox can verify them; the native side keeps the cameras, the files, the power rails and the kill latch. See docs/ARCHITECTURE.md. One to two sessions of work if nothing surprises us. The toolchain, the research and the design arena come first because every later unit depends on them.
 
 ## Blockers surfaced by grounding
 

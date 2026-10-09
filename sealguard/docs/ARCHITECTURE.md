@@ -49,7 +49,7 @@ Two streams of JSON text. Every inbound message carries `"v": 1` and a type tag 
 | `events` | the recorded event index with clip, thumb and layout | in reply to hello, saveEvent and deleteEvents |
 | `exported` | id, ok, where | after exportEvent |
 
-Outbound commands are hello, startWatch, stopWatch, startRecording, stopRecording, saveEvent, deleteEvents, startLapse, stopLapse, exportEvent, setKill and openAutostart. Two rules make up the whole contract a reload depends on. Every command names the session, clip or event it acts on, and a repeat is a no-op. Status echoes watch, recording and lapse exactly as last commanded.
+Outbound commands are hello, startWatch, stopWatch, startRecording, stopRecording, saveEvent, deleteEvents, startLapse, stopLapse, exportEvent, setKill and openAutostart. Two rules make up the whole contract a reload depends on. Every command names the session, clip or event it acts on, and a repeat is a no-op; a startWatch for a running session with a different deterrent value is an update. Status echoes watch, recording and lapse exactly as last commanded, and the page reconciles every status after startup, re-sending or stopping whatever differs. Host times more than five minutes ahead of the page clock are rejected, an event stamped before 2024 is dropped from the index, and a live sample older than the history means the device clock stepped back, in which case the later-stamped samples are discarded.
 
 ## Synthesis decision
 
