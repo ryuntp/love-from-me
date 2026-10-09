@@ -14,7 +14,7 @@ source "$TOOLCHAIN/env.sh"
 source "$ROOT/tools/lib.sh"
 
 APP="$ROOT/app"
-OUT="$ROOT/build"
+OUT="$ROOT/build/apk"
 MIN_SDK=29
 TARGET_SDK=29
 VARIANT=debug
@@ -68,7 +68,7 @@ fi
 
 echo "[5/6] align + sign ($VARIANT)"
 zipalign -p -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
-APK="$OUT/sealguard-$VARIANT.apk"
+APK="$ROOT/build/sealguard-$VARIANT.apk"
 if [ "$VARIANT" = release ]; then
 	jvm apksigner sign --ks "$RELEASE_KEYSTORE" --ks-key-alias "$RELEASE_KEY_ALIAS" \
 		--ks-pass "pass:$RELEASE_KS_PASS" --key-pass "pass:$RELEASE_KEY_PASS" \
