@@ -37,4 +37,8 @@ Scenarios are `night`, `prowler`, `leak`, `healthy` and `charging`. `speed` is v
 - `app/` the Android host: `AndroidManifest.xml`, `src/main/app/sealguard/` (the activity and the bridge), `res/`, `assets/ui/` (the page).
 - `ui-tests/` Node tests over the page's modules.
 - `tools/` build, test, screenshot and icon scripts.
-- `docs/` framing, design language, architecture, the implementation sketch, the decision log and the handoff note.
+- `docs/` framing, design language, architecture, the decision log and the handoff note.
+
+## Module map
+
+Under `app/assets/ui/`: `host.js` is the host boundary, the only parser of bridge text and encoder of commands. `telemetry.js` is the vehicle history at two resolutions. `sentry.js` is the sentry state machine. `parking.js`, `battery.js`, `tyres.js` and `recordings.js` are the owner-value features, each a pure function from the history to an assessment with a reason. `config.js` is the settings table and `format.js` the number wording. `main.js` holds the World and `advance`, the only writer of state; `app.js` is the DOM free runtime loop; `sim.js` is the deterministic host for the sandbox. `tokens.css` and `app.css` are the design language; `ui.js` is the component kit; `boot.js` mounts the shell; `screens/` holds one module per screen, each a pure `model` plus a `mount`.

@@ -1,6 +1,6 @@
 # SealGuard UI architecture
 
-The design package for the owner app: the HTML, CSS and ES module UI inside the WebView host, plus the owner-value features. It came out of a three-candidate design arena; the synthesis decision below records what was kept and dropped. SKETCH.md holds the module map, data shapes and signatures the implementation is built against.
+The design package for the owner app: the HTML, CSS and ES module UI inside the WebView host, plus the owner-value features. It came out of a three-candidate design arena; the synthesis decision below records what was kept and dropped. The data shapes and signatures live as JSDoc at the top of each module under `app/assets/ui/`; the module map is in the README.
 
 ## Problem
 
