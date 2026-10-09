@@ -10,6 +10,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TOOLCHAIN="${SEALGUARD_TOOLCHAIN:-$HOME/.cache/sealguard-toolchain}"
 # shellcheck disable=SC1091
 source "$TOOLCHAIN/env.sh"
+# shellcheck disable=SC1091
+source "$ROOT/tools/lib.sh"
 
 APP="$ROOT/app"
 OUT="$ROOT/build"
@@ -39,10 +41,9 @@ if [ -n "$JAVA_SOURCES" ]; then
 	javac --release 8 -Xlint:-options -nowarn -cp "$ANDROID_JAR$LIBS_CP" -d "$OUT/classes" $JAVA_SOURCES
 fi
 # dx has no desugaring, so lambdas and SAM conversions compile to classes and string concat stays inline.
-"$KOTLINC" -jvm-target 1.8 -Xlambdas=class -Xsam-conversions=class -Xstring-concat=inline \
+jvm "$KOTLINC" -jvm-target 1.8 -Xlambdas=class -Xsam-conversions=class -Xstring-concat=inline \
 	-Werror -nowarn -no-reflect -no-stdlib \
-	-cp "$ANDROID_JAR:$KOTLIN_STDLIB:$OUT/classes$LIBS_CP" -d "$OUT/classes" "$APP/src/main" 2>&1 \
-	| grep -v JAVA_TOOL_OPTIONS || true
+	-cp "$ANDROID_JAR:$KOTLIN_STDLIB:$OUT/classes$LIBS_CP" -d "$OUT/classes" "$APP/src/main"
 [ -n "$(find "$OUT/classes" -name '*.class' | head -1)" ] || { echo "no classes compiled" >&2; exit 1; }
 
 echo "[3/6] dex"
@@ -55,8 +56,7 @@ flatten "$KOTLIN_STDLIB" "$OUT/libs/kotlin-stdlib.jar"
 for jar in "$APP"/libs/*.jar; do
 	[ -f "$jar" ] && flatten "$jar" "$OUT/libs/$(basename "$jar")"
 done
-dalvik-exchange --dex --min-sdk-version="$MIN_SDK" --output="$OUT/classes.dex" "$OUT/classes" "$OUT"/libs/*.jar 2>&1 \
-	| grep -v JAVA_TOOL_OPTIONS || true
+jvm dalvik-exchange --dex --min-sdk-version="$MIN_SDK" --output="$OUT/classes.dex" "$OUT/classes" "$OUT"/libs/*.jar
 [ -f "$OUT/classes.dex" ] || { echo "dex failed" >&2; exit 1; }
 
 echo "[4/6] package"
@@ -70,17 +70,17 @@ echo "[5/6] align + sign ($VARIANT)"
 zipalign -p -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
 APK="$OUT/sealguard-$VARIANT.apk"
 if [ "$VARIANT" = release ]; then
-	apksigner sign --ks "$RELEASE_KEYSTORE" --ks-key-alias "$RELEASE_KEY_ALIAS" \
+	jvm apksigner sign --ks "$RELEASE_KEYSTORE" --ks-key-alias "$RELEASE_KEY_ALIAS" \
 		--ks-pass "pass:$RELEASE_KS_PASS" --key-pass "pass:$RELEASE_KEY_PASS" \
 		--v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
-		--out "$APK" "$OUT/aligned.apk" 2>&1 | grep -v JAVA_TOOL_OPTIONS || true
+		--out "$APK" "$OUT/aligned.apk"
 else
-	apksigner sign --ks "$DEBUG_KEYSTORE" --ks-pass pass:android --key-pass pass:android \
+	jvm apksigner sign --ks "$DEBUG_KEYSTORE" --ks-pass pass:android --key-pass pass:android \
 		--v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
-		--out "$APK" "$OUT/aligned.apk" 2>&1 | grep -v JAVA_TOOL_OPTIONS || true
+		--out "$APK" "$OUT/aligned.apk"
 fi
 
 echo "[6/6] verify"
-apksigner verify --verbose "$APK" 2>&1 | grep -v JAVA_TOOL_OPTIONS | sed -n '1,4p'
+jvm apksigner verify --verbose "$APK" | sed -n '1,4p'
 aapt2 dump badging "$APK" | grep -E "^package|^sdkVersion|^targetSdkVersion|^application-label:|uses-permission" | sed 's/^/  /'
 ls -la "$APK"
