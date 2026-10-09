@@ -11,6 +11,10 @@ Deltas from candidate B:
 - `ui.js` gains `syncList(parent, items, keyOf, create, update)` for keyed rows, so the timeline updates in place.
 - The dashboard shows a red banner while the host reports `killed`, so a forgotten kill switch cannot hide.
 - `tokens.css` zeroes every duration both under `prefers-reduced-motion` and under `[data-motion=reduce]`, which `boot.js` sets from `config.reduceMotion`, because the WebView may not forward the system setting.
+- `step(state, input, config, now)` takes no History. Sentry emits only startWatch, stopWatch, startRecording, stopRecording, `clipClosed` and alert. `advance` in `main.js` turns `clipClosed` into `saveEvent` with the pack from `recordings.js`, and diffs the plan from `parking.js` against `world.lapse` to emit startLapse and stopLapse. So `sentry.js` imports only `config.js` and `format.js`, and the call chain from the hub is two files deep.
+- `createApp` moves to `app.js`. `main.js` is World, `initialWorld` and `advance` only. World gains `lapse`, the last lapse command sent, so `advance` can diff it.
+- `SentryStatus` gains `canArm` and `canDisarm`, so no screen reads `sentry.mode`.
+- `KEEP.days` is 31. Battery thresholds are one named table for the Seal's lithium iron phosphate 12V battery, not a table per chemistry.
 - `ui-tests/support.mjs`, `format.test.mjs` and `config.test.mjs` already exist. `conformance.test.mjs` also checks that no text size token is under 20 px and that every interactive control class sets a 72 px minimum.
 
 
@@ -28,14 +32,15 @@ Plain ES modules for Chromium 74 and Node 22. Every body throws `not implemented
 | `icons.svg` | In-house symbol sprite for navigation, triggers and actions. |
 | `fonts/Inter.woff2` | Already bundled Inter variable font; titles ask for the Display optical size through font-variation-settings and get the text cut if the subset lacks that axis. |
 | `fonts/LICENSE.txt` | Already bundled OFL license, linked from Settings, About. |
-| `main.js` | The hub: World, `advance`, and the DOM-free `createApp` loop. |
+| `main.js` | The hub: World, `initialWorld` and `advance`. |
+| `app.js` | The DOM-free `createApp` loop: load, connect, tick, persist by reference change, run effects. |
 | `boot.js` | Mounts navigation and screens, turns load and hashchange into view intents, applies theme and reduced motion, renders once per frame after a change. |
 | `format.js` | Owner-facing numbers and times. Already implemented. |
 | `host.js` | The boundary: native bridge adapter, total parser for inbound text, command encoder. |
 | `sim.js` | Deterministic host: scripted scenarios on virtual time with seeded noise, speaking the car's JSON and obeying every command. |
 | `config.js` | The FIELDS table, total parser, one-key load and save. Already implemented. |
 | `telemetry.js` | Snapshot history at two resolutions: retention, windows, trend fit, per-day persistence. |
-| `sentry.js` | Sentry state machine: `step` and the status every screen shows. |
+| `sentry.js` | Sentry state machine over config and clock only: `step` and the status every screen shows. |
 | `parking.js` | Runtime budget and the time-lapse plan. |
 | `battery.js` | 12V battery health. |
 | `tyres.js` | Tyre slow-leak detection. |
@@ -122,7 +127,7 @@ export function connectHost(bridge, clock, onInput) { throw new Error('not imple
 /** @typedef {{getItem(k: string): string|null, setItem(k: string, v: string): void, removeItem(k: string): void, key(i: number): string|null, length: number}} StorageLike */
 
 /** Retention policy; battery.js reads afterTransitionMs as its sag window so the two cannot drift. */
-export const KEEP = { recentMs: 10 * 60e3, everyMs: 10 * 60e3, afterTransitionMs: 15e3, days: 45 };
+export const KEEP = { recentMs: 10 * 60e3, everyMs: 10 * 60e3, afterTransitionMs: 15e3, days: 31 };
 /** @type {History} */
 export const EMPTY_HISTORY = { latest: null, recent: [], kept: [] };
 
@@ -162,29 +167,30 @@ Implemented. Read `sealguard/app/assets/ui/config.js` for `FIELDS`, `parseConfig
  * halted carries no lapseS, so a time-lapse cannot outlive a floor stop.
  */
 /** @typedef {Extract<Input, {kind: 'vehicle'|'detection'|'status'|'tick'|'arm'|'disarm'|'setConfig'}>} SentryInput */
-/** @typedef {{config: Config, history: History, now: Millis}} SentryEnv */
 /** @typedef {'armed'|'recording'|'alert'|'disarmed'} Tone  the DESIGN.md status mapping; only app.css turns a tone into a color */
-/** @typedef {Command | {kind: 'alert', tone: Tone, title: string, body: string}} Effect */
-/** @typedef {{state: SentryState, effects: Effect[]}} Transition */
-/** @typedef {{tone: Tone, title: string, detail: string, since: Millis|null}} SentryStatus */
+/** @typedef {{kind: 'alert', tone: Tone, title: string, body: string}} Alert */
+/** @typedef {Extract<Command, {kind: 'startWatch'|'stopWatch'|'startRecording'|'stopRecording'}> | {kind: 'clipClosed', event: EventCore} | Alert} SentryEffect
+ *   clipClosed is sentry's own word; advance turns it into saveEvent with the pack, so the pack format never enters this module */
+/** @typedef {{state: SentryState, effects: SentryEffect[]}} Transition */
+/** @typedef {{tone: Tone, title: string, detail: string, since: Millis|null, canArm: boolean, canDisarm: boolean}} SentryStatus */
 
 /** @type {SentryState} */
 export const INITIAL_SENTRY = { mode: 'starting', snapshot: null, status: null };
 
-/** The only constructor of SentryState: applies one input and returns the next state and the effects the shell must run; a request it cannot honor returns the same state plus an alert that says why. @param {SentryState} state @param {SentryInput} input @param {SentryEnv} env @returns {Transition} */
-export function step(state, input, env) {
+/** The only constructor of SentryState: applies one input and returns the next state and the effects the hub must run; a request it cannot honor returns the same state plus an alert that says why. @param {SentryState} state @param {SentryInput} input @param {Config} config @param {Millis} now @returns {Transition} */
+export function step(state, input, config, now) {
   // TODO status killed => off, saving any open clip; off plus a status not killed => starting.
-  // TODO starting holds a snapshot and a status; with both, acc or on => driving, else park with id from lastParkedAt,
-  //      adopt status.watch, recording and lapse, then apply the arming rule. Later statuses re-send what the host lost.
-  // TODO acc or on from a parked mode => driving with stopRecording, saveEvent, stopWatch, stopLapse.
-  // TODO off from driving => park; the arming rule picks idle or armed with startWatch; lapsePlan run => startLapse.
-  //      Rule locked: lock arms, unlock returns to idle and closes the clip. A lapsePlan band change => startLapse again.
+  // TODO starting holds a snapshot and a status; with both, acc or on => driving, else park with id 'p' + the power-off at,
+  //      adopt status.watch and recording, then apply the arming rule. Later statuses re-send what the host lost.
+  // TODO acc or on from a parked mode => driving with stopRecording, clipClosed, stopWatch.
+  // TODO off from driving => park; the arming rule picks idle or armed with startWatch.
+  //      Rule locked: lock arms, unlock returns to idle and closes the clip.
   // TODO v12 under v12Floor or soc at or under socFloor sets lowSince; held 30 s, or v12Low at once => halted, closing
-  //      clip, watch and lapse, with an alert. Holding exists because a one-second sag must not end sentry for the night.
+  //      clip and watch, with an alert. Holding exists because a one-second sag must not end sentry for the night.
   // TODO armed plus impact, or motion at or over the sensitivity threshold => recording, startRecording, alert.
-  // TODO tick while recording, 10 s quiet or 5 min long => stopRecording, saveEvent with incidentPack => armed.
+  // TODO tick while recording, 10 s quiet or 5 min long => stopRecording, clipClosed => armed.
   // TODO arm while armed is a silent no-op; arm from driving, halted, off or starting => same state plus an alert saying why.
-  // TODO setConfig re-applies rule and lapse; halted resumes when the latest reading clears the new floor.
+  // TODO setConfig re-applies the rule; halted resumes when the latest reading clears the new floor.
   throw new Error('not implemented');
 }
 /** What the hero card, the sidebar badge and the night surface show for a state. @param {SentryState} state @param {Config} config @param {Millis} now @returns {SentryStatus} */
@@ -213,7 +219,7 @@ export function lapsePlan(budget, config) { throw new Error('not implemented'); 
  * @typedef {{verdict: 'learning', reason: string, nights: {at: Millis, volts: Volts}[]}
  *   | {verdict: 'good'|'watch'|'replace', reason: string, nights: {at: Millis, volts: Volts}[], restingV: Volts, slopePerDay: number, sagV: Volts|null}} BatteryHealth
  */
-/** Judges the 12V battery from nightly resting voltage, taken two hours into a park with no charging, and from the sag after each wake; thresholds come from one table per chemistry. @param {History} history @param {Millis} now @returns {BatteryHealth} */
+/** Judges the 12V battery from nightly resting voltage, taken two hours into a park with no charging, and from the sag after each wake; thresholds are one named table for the lithium iron phosphate 12V battery. @param {History} history @param {Millis} now @returns {BatteryHealth} */
 export function assessBattery(history, now) { throw new Error('not implemented'); }
 ```
 
@@ -255,8 +261,9 @@ export function timeline(events, filter, now) { throw new Error('not implemented
  *   | {kind: 'openAutostart'} | {kind: 'view', patch: Partial<ViewState>}} Intent
  */
 /** @typedef {HostInput | Intent | {kind: 'tick'}} Input */
-/** @typedef {{config: Config, history: History, sentry: SentryState, host: HostStatus|null, events: RecordedEvent[],
- *   link: {heardAt: Millis|null, rejected: number, lastError: string}, view: ViewState}} World */
+/** @typedef {Command | Alert} Effect  what advance returns for app.js to run */
+/** @typedef {{config: Config, history: History, sentry: SentryState, lapse: {session: SessionId, intervalS: number}|null, host: HostStatus|null, events: RecordedEvent[],
+ *   link: {heardAt: Millis|null, rejected: number, lastError: string}, view: ViewState}} World  lapse is the last lapse command sent, so advance can diff the plan against it */
 /** @typedef {{bridge: Bridge, clock: Clock, storage: StorageLike, onAlert: (alert: Extract<Effect, {kind: 'alert'}>) => void}} AppOptions */
 /** @typedef {{dispatch: (input: Input) => void, world: () => World, subscribe: (fn: () => void) => void}} App */
 /** @template M @typedef {{route: Route, title: string, icon: string, model: (world: World, now: Millis) => M,
@@ -265,8 +272,13 @@ export function timeline(events, filter, now) { throw new Error('not implemented
 
 /** The World before any host message. @param {Config} config @param {History} history @returns {World} */
 export function initialWorld(config, history) { throw new Error('not implemented'); }
-/** The only writer of World: routes one input to its owning module and returns the next World and the effects to run. @param {World} world @param {Input} input @param {Millis} now @returns {{world: World, effects: Effect[]}} */
+/** The only writer of World: routes one input to its owning module, turns clipClosed into saveEvent with the pack, diffs the lapse plan against world.lapse, and returns the next World and the effects to run. @param {World} world @param {Input} input @param {Millis} now @returns {{world: World, effects: Effect[]}} */
 export function advance(world, input, now) { throw new Error('not implemented'); }
+```
+
+## app.js
+
+```js
 /** DOM-free runtime: loads config and history, connects the host, ticks each second, persists slices whose reference changed, runs effects. @param {AppOptions} opts @returns {App} */
 export function createApp(opts) {
   // TODO inputs arriving while effects run are queued and applied in order, so no host can interleave two advances.
