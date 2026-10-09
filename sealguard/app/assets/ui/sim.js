@@ -19,11 +19,11 @@ const COLD_KPA = { fl: 240, fr: 242, rl: 239, rr: 241 };
 
 /**
  * Each scenario is a parked evening at 21:00 with its own past. parkedMin is how long the car has been parked at the start;
- * 0 means the evening drive ends as the scenario begins. v12 describes the 12V battery: resting volts in the past, their
- * decline per day, resting volts tonight, slopes per hour parked, and the sag on wake.
+ * 0 means the evening drive ends as the scenario begins. v12 describes the 12V battery: resting volts on the night before
+ * the scenario, how much higher each earlier night rested, resting volts tonight, slopes per hour parked, and the sag on wake.
  */
 const SCENARIOS = {
-	night: { pastDays: 7, parkedMin: 0, charging: false, leak: null, v12: { restPast: 12.95, decline: 0.02, restLive: 12.55, slopePast: -0.005, slopeLive: -0.35, sag: 0.9 },
+	night: { pastDays: 7, parkedMin: 0, charging: false, leak: null, v12: { restPast: 12.92, decline: 0.02, restLive: 12.55, slopePast: -0.005, slopeLive: -0.35, sag: 0.9 },
 		detections: [{ afterMs: 5 * MINUTE, trigger: 'motion', cameras: ['front'], score: 0.6 }] },
 	prowler: { pastDays: 7, parkedMin: 0, charging: false, leak: null, v12: { restPast: 13.1, decline: 0, restLive: 13.1, slopePast: -0.004, slopeLive: -0.008, sag: 0.45 },
 		detections: [{ afterMs: MINUTE, trigger: 'motion', cameras: ['front'], score: 0.7 }, { afterMs: 4 * MINUTE, trigger: 'motion', cameras: ['left', 'front'], score: 0.9 }, { afterMs: 8 * MINUTE, trigger: 'impact', cameras: ['rear'], score: 1 }] },
@@ -94,7 +94,7 @@ function createCar(sc, seed) {
 		return last;
 	};
 	const rest = function (t) {
-		return t >= START ? sc.v12.restLive : sc.v12.restPast - sc.v12.decline * (START - t) / DAY;
+		return t >= START ? sc.v12.restLive : sc.v12.restPast + sc.v12.decline * (START - t) / DAY;
 	};
 	const cold = function (wheel, t) {
 		const weather = 0.6 * Math.sin((t - START) / DAY / 5);
@@ -214,7 +214,7 @@ export function createSimulator(scenario, seed, theme) {
 		startWatch: function (c) { host.watch = { session: c.session, since: c.since }; reply(status); },
 		stopWatch: function (c) { if (host.watch !== null && host.watch.session === c.session) host.watch = null; reply(status); },
 		startRecording: function (c) { host.recording = c.clip; reply(status); },
-		stopRecording: function (c) { if (host.recording !== null && host.recording.id === c.clip) host.recording = null; reply(status); },
+		stopRecording: function (c) { if (host.recording !== null && host.recording.id === c.id) host.recording = null; reply(status); },
 		saveEvent: function (c) {
 			if (!events.some(function (e) { return e.id === c.event.id; })) events = events.concat([recorded(c.event)]);
 			reply(eventsIndex);

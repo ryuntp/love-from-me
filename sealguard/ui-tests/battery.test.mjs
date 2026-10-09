@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { snapshot, T0, HOUR, DAY } from './support.mjs';
+import { snapshot, T0, MINUTE, HOUR, DAY } from './support.mjs';
 import { EMPTY_HISTORY, record } from '../app/assets/ui/telemetry.js';
 import { assessBattery, LFP_12V } from '../app/assets/ui/battery.js';
 
@@ -89,4 +89,28 @@ test('sag on wake decides watch over 0.6 V and replace over 1.2 V', () => {
 	});
 	assert.equal(assessBattery(noWake, T0).sagV, null, 'no wake, no sag');
 	assert.equal(assessBattery(noWake, T0).nights.length, 4, 'one park spanning days rests once per night');
+});
+
+test('the rest clock restarts at the last charging sample, so a scheduled charge that ends before the drive is not read as the rest', () => {
+	const build = (leaveHours) => {
+		let h = EMPTY_HISTORY;
+		for (let d = 5; d >= 1; d--) {
+			const off = T0 - d * DAY - HOUR;
+			h = record(h, snapshot({ at: off - MINUTE, power: 'on', v12: 14.2 }));
+			for (let t = off; t < off + leaveHours * HOUR; t += 10 * MINUTE) {
+				const charging = t >= off + 5 * MINUTE && t < off + 11 * HOUR;
+				const v12 = charging ? 13.55 : t < off + 5 * MINUTE ? 13.3 : 12.6 + 0.9 * Math.exp(-(t - off - 11 * HOUR) / (40 * MINUTE));
+				h = record(h, snapshot({ at: t, v12, charge: charging ? { state: 'charging', kw: 7, dc: false } : { state: 'unplugged' } }));
+			}
+			h = record(h, snapshot({ at: off + leaveHours * HOUR, power: 'on', v12: 12.2 }));
+		}
+		return h;
+	};
+	const rested = assessBattery(build(14), T0);
+	assert.equal(rested.verdict, 'replace');
+	assert.equal(rested.reason, 'Rests at 12.6 V, under 12.7 V');
+	assert.equal(rested.nights.length, 5);
+	rested.nights.forEach((n) => assert.ok(n.volts < 12.7, 'the readings right after the charge are left out: ' + n.volts));
+	const early = assessBattery(build(12.5), T0);
+	assert.equal(early.verdict, 'learning', 'leaving within two hours of the charge gives no resting reading');
 });

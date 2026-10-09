@@ -64,6 +64,9 @@ test('malformed, wrong-version, unknown and out-of-range input becomes rejected 
 		[wire('events', { events: [recordedEvent({ endedAt: T0 - 2 * 3600e3 })] }), /^events\[0\].endedAt must not precede startedAt$/],
 		[wire('events', { events: { id: 'c1' } }), /^events must be a list$/],
 		[wire('exported', { id: '', ok: true, where: '' }), /^id must be text$/],
+		[wire('status', hostStatus({ cameras: [{ id: 'front', fps: 15 }, { id: 'rear', fps: 15 }, { id: 'front', fps: 10 }] })), /^cameras\[2\]\.id must not repeat cameras\[0\]$/],
+		[wire('status', hostStatus({ selfTest: [{ name: 'Camera', ok: true, detail: 'a' }, { name: 'Camera', ok: false, detail: 'b' }] })), /^selfTest\[1\]\.name must not repeat selfTest\[0\]$/],
+		[wire('events', { events: [recordedEvent({ id: 'c1' }), recordedEvent({ id: 'c2', startedAt: T0 - 2 * 3600e3 }), recordedEvent({ id: 'c1', startedAt: T0 - 3 * 3600e3 })] }), /^events\[2\]\.id must not repeat events\[0\]$/],
 	];
 	cases.forEach(([text, reason]) => {
 		const input = parseMessage(text);
@@ -80,13 +83,19 @@ test('the parser never throws, whatever it is handed', () => {
 	});
 });
 
-test('loopback and local media pass the url check', () => {
-	['data:image/svg+xml;utf8,<svg/>', 'data:video/mp4;base64,AAAA', 'file:///sdcard/clip.mp4', 'blob:null/abc', 'http://127.0.0.1:8080/live', 'http://localhost/live'].forEach((u) => {
-		assert.equal(parseMessage(wire('status', hostStatus({ mosaic: { url: u, layout: ['front'] } }))).kind, 'status', u);
+test('loopback and local media pass the url check, judged on the parsed url so userinfo cannot smuggle a network host', () => {
+	['data:image/svg+xml;utf8,<svg/>', 'data:video/mp4;base64,AAAA', 'file:///sdcard/clip.mp4', 'blob:null/abc', 'http://127.0.0.1:8080/live', 'http://localhost/live', 'http://localhost:8080/live', 'http://127.0.0.1/'].forEach((u) => {
+		const input = parseMessage(wire('status', hostStatus({ mosaic: { url: u, layout: ['front'] } })));
+		assert.equal(input.kind, 'status', u);
+		if (u.indexOf('http') === 0) assert.ok(['127.0.0.1', 'localhost'].indexOf(new URL(input.status.mosaic.url).hostname) >= 0, u + ' resolves to loopback');
 	});
-	['data:text/html,<b>x</b>', 'http://127.0.0.1.evil.example/', 'ftp://127.0.0.1/x', 'localhost/live'].forEach((u) => {
-		assert.equal(parseMessage(wire('status', hostStatus({ mosaic: { url: u, layout: ['front'] } }))).kind, 'rejected', u);
+	['data:text/html,<b>x</b>', 'data:image', 'http://127.0.0.1.evil.example/', 'ftp://127.0.0.1/x', 'localhost/live', 'http://localhost:@example.com/x.jpg', 'http://127.0.0.1:80@example.com/', 'http://user@localhost/live',
+		'https://127.0.0.1/live', 'https://localhost/live', 'http://localhost.example/x', 'http://[::1]/x', 'http://localhost:abc/x'].forEach((u) => {
+		const input = parseMessage(wire('status', hostStatus({ mosaic: { url: u, layout: ['front'] } })));
+		assert.equal(input.kind, 'rejected', u);
+		assert.match(input.reason, /^mosaic\.url must be a data, file, blob or loopback url$/);
 	});
+	assert.equal(parseMessage(wire('events', { events: [recordedEvent({ thumbUrl: 'http://localhost:@example.com/x.jpg' })] })).reason, 'events[0].thumbUrl must be a data, file, blob or loopback url');
 });
 
 test('every command encodes to v 1 with its kind as t and its fields alongside', () => {
@@ -97,7 +106,7 @@ test('every command encodes to v 1 with its kind as t and its fields alongside',
 		{ kind: 'startWatch', session: 'p1', since: T0, deterrent: false },
 		{ kind: 'stopWatch', session: 'p1' },
 		{ kind: 'startRecording', clip, preRollS: 10 },
-		{ kind: 'stopRecording', clip: clip.id },
+		{ kind: 'stopRecording', id: clip.id },
 		{ kind: 'saveEvent', event, pack: '{"schema":"sealguard.incident/1"}' },
 		{ kind: 'deleteEvents', ids: ['c1', 'c2'] },
 		{ kind: 'startLapse', session: 'p1', intervalS: 30 },
@@ -114,6 +123,9 @@ test('every command encodes to v 1 with its kind as t and its fields alongside',
 		const { kind, ...fields } = command;
 		Object.keys(fields).forEach((k) => assert.deepEqual(wireForm[k], fields[k], command.kind + '.' + k));
 	});
+	const stop = JSON.parse(encodeCommand({ kind: 'stopRecording', id: clip.id }));
+	assert.equal(stop.id, clip.id, 'stopRecording names the clip under id, the same word a saved event uses');
+	assert.equal('clip' in stop, false);
 });
 
 test('connectHost parses what the bridge delivers and encodes what the sender is given', () => {

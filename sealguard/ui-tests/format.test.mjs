@@ -31,3 +31,17 @@ test('time and day labels use the local zone', () => {
 	assert.equal(fmt.day(now - 24 * 3600e3, now), 'Yesterday');
 	assert.equal(fmt.day(new Date(2026, 9, 6, 8, 0).getTime(), now), 'Tue 6 Oct');
 });
+
+test('a span is rounded as a whole, so it never shows 60 s or 60 min', () => {
+	assert.equal(fmt.span(59.6e3), '1 min');
+	assert.equal(fmt.span(59.4e3), '59 s');
+	assert.equal(fmt.span(59 * 60e3 + 40e3), '1 h');
+	assert.equal(fmt.span(3600e3 + 59 * 60e3 + 40e3), '2 h');
+	assert.equal(fmt.span(3600e3 + 59 * 60e3 + 20e3), '1 h 59 min');
+	assert.equal(fmt.span(-5e3), '0 s');
+});
+
+test('volts can carry two decimals for a reading set against a one decimal floor', () => {
+	assert.equal(fmt.volts(12.38, 2), '12.38 V');
+	assert.equal(fmt.volts(12.38), '12.4 V');
+});

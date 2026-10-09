@@ -143,15 +143,37 @@ function storage_row(s) {
 	return JSON.parse(storage.getItem('sealguard.history.' + dayKey(s.at))).map((r) => JSON.stringify(r))[0];
 }
 
-test('saving returns false on a refusing storage after giving up its oldest days, and prunes stale days', () => {
+test('saving returns false on a refusing storage without touching a day inside the window, and prunes stale days', () => {
 	const storage = memoryStorage({ ['sealguard.history.' + dayKey(T0 - 60 * DAY)]: '[]', ['sealguard.history.' + dayKey(T0 - 3 * DAY)]: '[]' });
 	const h = feed(EMPTY_HISTORY, [at(0)]);
 	assert.equal(saveHistory(storage, h), true);
 	assert.deepEqual(Object.keys(storage.dump()).sort(), ['sealguard.history.' + dayKey(T0 - 3 * DAY), 'sealguard.history.' + dayKey(T0)]);
 	storage.refuseWrites = true;
 	assert.equal(saveHistory(storage, feed(h, [at(10 * MINUTE)])), false);
+	assert.deepEqual(Object.keys(storage.dump()).sort(), ['sealguard.history.' + dayKey(T0 - 3 * DAY), 'sealguard.history.' + dayKey(T0)], 'a refused write costs no day inside the window');
 	assert.equal(saveHistory(storage, EMPTY_HISTORY), true);
 	const broken = { get length() { throw new Error('gone'); }, key() { return null; }, getItem() { return null; }, setItem() {}, removeItem() {} };
 	assert.deepEqual(loadHistory(broken, T0), EMPTY_HISTORY);
 	assert.equal(saveHistory(broken, h), false);
+});
+
+test('a refused write drops only days past the kept window, oldest first, then gives up with every day inside it intact', () => {
+	const storage = memoryStorage();
+	let h = EMPTY_HISTORY;
+	for (let d = 30; d >= 1; d--) {
+		h = record(h, at(-d * DAY));
+		assert.equal(saveHistory(storage, h), true);
+	}
+	storage.setItem('sealguard.history.' + dayKey(T0 - 40 * DAY), '[]');
+	storage.setItem('sealguard.history.' + dayKey(T0 - 33 * DAY), '[]');
+	assert.equal(Object.keys(storage.dump()).length, 32);
+	storage.refuseWrites = true;
+	h = record(h, at(0));
+	assert.equal(saveHistory(storage, h), false);
+	const keys = Object.keys(storage.dump()).sort();
+	assert.equal(keys.length, 30, 'the two days past the window went, nothing inside it');
+	assert.equal(keys[0], 'sealguard.history.' + dayKey(T0 - 30 * DAY));
+	assert.equal(loadHistory(storage, T0).kept.length, 30, 'a reload still sees the whole month');
+	assert.equal(saveHistory(storage, h), false, 'nothing more to give');
+	assert.equal(Object.keys(storage.dump()).length, 30);
 });

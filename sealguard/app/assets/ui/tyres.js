@@ -3,7 +3,14 @@
 import { since, dayKey } from './telemetry.js';
 
 /** @typedef {{wheel: Wheel, kpa20: Kpa, kpaPerWeek: number}} TyreTrend  kpa20 is cold pressure compensated to 20 degrees C */
-/** @typedef {{verdict: 'learning', reason: string} | {verdict: 'steady', reason: string, tyres: TyreTrend[]} | {verdict: 'leak', reason: string, wheel: Wheel, tyres: TyreTrend[]}} TyreHealth */
+/**
+ * @typedef {{verdict: 'learning', reason: string}
+ *   | {verdict: 'steady', reason: string, tyres: TyreTrend[]}
+ *   | {verdict: 'watch', reason: string, wheels: Wheel[], tyres: TyreTrend[]}
+ *   | {verdict: 'leak', reason: string, wheel: Wheel, wheels: Wheel[], tyres: TyreTrend[]}} TyreHealth
+ * leak names every wheel that meets both rules, wheel being the fastest. watch is loss at the leak rate that no sibling
+ * comparison can pin on one wheel, so the pressures need checking. steady means no wheel reaches the leak rate.
+ */
 
 const HOUR = 3600e3;
 const DAY = 24 * HOUR;
@@ -61,7 +68,16 @@ function coldDays(series, from) {
 	});
 }
 
-/** Fits each tyre's compensated cold pressure over 21 days and flags the one falling at least 0.7 kPa a day and 0.5 kPa a day faster than its siblings' median; comparing siblings cancels weather. @param {History} history @param {Millis} now @returns {TyreHealth} */
+function list(words) { return words.length === 1 ? words[0] : words.slice(0, -1).join(', ') + ' and ' + words[words.length - 1]; }
+/** The wheel names as a sentence subject, only the first capitalised. */
+function names(wheels) {
+	return list(wheels.map(function (w, i) { return i === 0 ? WHEEL_NAMES[w] : WHEEL_NAMES[w].toLowerCase(); }));
+}
+function losing(wheels, perDay) {
+	return names(wheels) + (wheels.length === 1 ? ' is losing ' : ' are losing ') + list(wheels.map(function (w) { return (-perDay[w]).toFixed(1); })) + ' kPa a day';
+}
+
+/** Fits each tyre's compensated cold pressure over 21 days. A wheel falling at least 0.7 kPa a day and 0.5 kPa a day faster than its siblings' median is a leak, and every such wheel is named; comparing siblings cancels weather. Loss at the leak rate with no wheel standing out is watch, and steady is only for a set where no wheel reaches it. @param {History} history @param {Millis} now @returns {TyreHealth} */
 export function assessTyres(history, now) {
 	const days = coldDays(since(history, now - WINDOW_DAYS * DAY), now - WINDOW_DAYS * DAY);
 	if (days.length < MIN_DAYS) return { verdict: 'learning', reason: days.length + ' of ' + MIN_DAYS + ' cold days measured' };
@@ -71,16 +87,23 @@ export function assessTyres(history, now) {
 		perDay[w] = theilSen(days.map(function (d) { return [(d.at - first) / DAY, d.wheels[w]]; }));
 		return { wheel: w, kpa20: days[days.length - 1].wheels[w], kpaPerWeek: perDay[w] * 7 };
 	});
-	let leak = null;
-	WHEELS.forEach(function (w) {
-		const siblings = median(WHEELS.filter(function (o) { return o !== w; }).map(function (o) { return perDay[o]; }));
-		if (perDay[w] <= -LEAK_PER_DAY && perDay[w] <= siblings - FASTER_THAN_SIBLINGS && (leak === null || perDay[w] < perDay[leak.wheel])) leak = { wheel: w, siblings: siblings };
-	});
-	if (leak !== null) {
-		const rate = -perDay[leak.wheel];
-		return { verdict: 'leak', wheel: leak.wheel, tyres: tyres,
-			reason: WHEEL_NAMES[leak.wheel] + ' is losing ' + rate.toFixed(1) + ' kPa a day, ' + (leak.siblings - perDay[leak.wheel]).toFixed(1) + ' kPa a day faster than the other three' };
+	const siblings = {};
+	WHEELS.forEach(function (w) { siblings[w] = median(WHEELS.filter(function (o) { return o !== w; }).map(function (o) { return perDay[o]; })); });
+	const fast = WHEELS.filter(function (w) { return perDay[w] <= -LEAK_PER_DAY; });
+	const leaks = fast.filter(function (w) { return perDay[w] <= siblings[w] - FASTER_THAN_SIBLINGS; });
+	if (leaks.length) {
+		const worst = leaks.reduce(function (a, b) { return perDay[b] < perDay[a] ? b : a; });
+		const reason = leaks.length === 1
+			? losing(leaks, perDay) + ', ' + (siblings[worst] - perDay[worst]).toFixed(1) + ' kPa a day faster than the other three'
+			: losing(leaks, perDay);
+		return { verdict: 'leak', wheel: worst, wheels: leaks, tyres: tyres, reason: reason };
 	}
-	const together = WHEELS.every(function (w) { return perDay[w] <= -LEAK_PER_DAY; });
-	return { verdict: 'steady', tyres: tyres, reason: together ? 'All four are losing pressure together, as weather does' : 'All four are holding pressure over ' + days.length + ' days' };
+	if (fast.length === WHEELS.length) {
+		const weekly = Math.round(-median(WHEELS.map(function (w) { return perDay[w]; })) * 7);
+		return { verdict: 'watch', wheels: fast, tyres: tyres, reason: 'All four are losing about ' + weekly + ' kPa a week, so check the pressures' };
+	}
+	if (fast.length) return { verdict: 'watch', wheels: fast, tyres: tyres, reason: losing(fast, perDay) + ', so check the pressures' };
+	const slow = WHEELS.filter(function (w) { return perDay[w] <= -LEAK_PER_DAY / 2; });
+	return { verdict: 'steady', tyres: tyres,
+		reason: slow.length ? losing(slow, perDay) + ', under the ' + LEAK_PER_DAY + ' that marks a leak' : 'All four are holding pressure over ' + days.length + ' days' };
 }

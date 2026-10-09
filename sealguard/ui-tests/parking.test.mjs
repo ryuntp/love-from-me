@@ -34,13 +34,22 @@ test('a fresh park with no past parks uses the assumed draw: 0.3 percent an hour
 	assert.equal(b.reason, '0.3% an hour assumed until measured, to the charge floor');
 });
 
-test('after thirty minutes parked the budget is measured over this park and the nearer floor limits it', () => {
-	const h = feed(EMPTY_HISTORY, park(T0, 40 / 60, -1, -0.1));
-	const b = runtimeBudget(h, defaults, T0 + 40 * MINUTE);
+test('this park measures the charge draw after thirty minutes and the 12V draw only from two hours in, and the nearer floor limits it', () => {
+	const h = feed(EMPTY_HISTORY, park(T0, 3, -1, -0.1));
+	const b = runtimeBudget(h, defaults, T0 + 3 * HOUR);
 	assert.equal(b.basis, 'thisPark');
 	assert.equal(b.limitedBy, 'v12');
 	assert.ok(Math.abs(b.hours - (h.latest.v12 - 12.4) / 0.1) < 1e-6, String(b.hours));
 	assert.equal(b.reason, '100 mV an hour measured this park, to the 12V floor');
+	const early = runtimeBudget(feed(EMPTY_HISTORY, park(T0, 40 / 60, -1, -0.1)), defaults, T0 + 40 * MINUTE);
+	assert.equal(early.basis, 'thisPark');
+	assert.equal(early.limitedBy, 'soc', 'at forty minutes the 12V draw is not yet measured, so the charge limits');
+	assert.equal(early.reason, '1.0% an hour measured this park, to the charge floor');
+	const surface = (minutes) => feed(EMPTY_HISTORY, Array.from({ length: minutes / 10 + 1 }, (_, i) => snapshot({ at: T0 + i * 10 * MINUTE, soc: 70 - i / 6, v12: 12.7 + 0.3 * Math.exp(-i * 10 / 40) })));
+	const decaying = runtimeBudget(surface(90), defaults, T0 + 90 * MINUTE);
+	assert.equal(decaying.limitedBy, 'soc', 'the surface charge falling away in the first hour is not read as a 12V draw');
+	const settled = runtimeBudget(surface(180), defaults, T0 + 180 * MINUTE);
+	assert.ok(settled.limitedBy !== 'v12' || settled.hours > 20, 'after three hours only the settled tail is fitted: ' + settled.reason);
 	const steep = feed(EMPTY_HISTORY, park(T0, 40 / 60, -3, -0.1));
 	const socLimited = runtimeBudget(steep, parseConfig({ v12Floor: 11.8, socFloor: 50 }), T0 + 40 * MINUTE);
 	assert.equal(socLimited.limitedBy, 'soc');
@@ -86,7 +95,33 @@ test('charging stretches are left out of a measurement and a dropping rate is ne
 	const flat = feed(EMPTY_HISTORY, park(T0, 1, 0, 0.01));
 	assert.deepEqual(runtimeBudget(flat, defaults, T0 + HOUR), { kind: 'learning', reason: 'Neither battery is falling yet' });
 	const belowFloor = runtimeBudget(feed(EMPTY_HISTORY, park(T0, 1, -1, 0, { soc: 15 })), defaults, T0 + HOUR);
-	assert.equal(belowFloor.kind, 'learning', 'a reading already under the floor has no hours to count');
+	assert.deepEqual(belowFloor, { kind: 'estimate', hours: 0, limitedBy: 'soc', basis: 'thisPark', reason: 'At the charge floor' }, 'a reading at or under a floor has no runtime left, whatever the rate');
+	let low = EMPTY_HISTORY;
+	for (let m = 0; m <= 90; m += 5) low = record(low, snapshot({ at: T0 + m * MINUTE, v12: 13.0 - 0.01 * m, soc: 60 - 0.005 * m }));
+	const under12V = runtimeBudget(low, defaults, T0 + 90 * MINUTE);
+	assert.equal(under12V.kind, 'estimate');
+	assert.equal(under12V.hours, 0);
+	assert.equal(under12V.limitedBy, 'v12', 'the crossed 12V floor limits even though the charge would last for days');
+	assert.equal(under12V.reason, 'At the 12V floor');
+	assert.deepEqual(lapsePlan(under12V, defaults), { kind: 'off', reason: 'Under two hours of runtime left' });
+	assert.equal(runtimeBudget(feed(EMPTY_HISTORY, park(T0, 1, -1, 0, { v12: 12.4 })), defaults, T0 + HOUR).hours, 0, 'exactly at the floor counts as reached');
+});
+
+test('a band already running is kept until the ideal one is two steps away; off and run switch at once', () => {
+	const estimate = (hours) => ({ kind: 'estimate', hours, limitedBy: 'soc', basis: 'thisPark', reason: '' });
+	assert.equal(lapsePlan(estimate(7.5), defaults).intervalS, 30);
+	assert.equal(lapsePlan(estimate(7.5), defaults, null).intervalS, 30);
+	assert.equal(lapsePlan(estimate(7.5), defaults, 20).intervalS, 20, 'one step from the ideal 30 stays');
+	assert.equal(lapsePlan(estimate(7.5), defaults, 60).intervalS, 60);
+	assert.equal(lapsePlan(estimate(7.5), defaults, 120).intervalS, 30, 'two steps away moves');
+	assert.equal(lapsePlan(estimate(7.5), defaults, 10).intervalS, 30);
+	assert.equal(lapsePlan(estimate(7.5), defaults, 45).intervalS, 30, 'an interval off the bands is replaced');
+	assert.equal(lapsePlan(estimate(7.5), defaults, 20).reason, 'One frame every 20 s, about 1350 frames');
+	assert.equal(lapsePlan(estimate(100), defaults, 120).intervalS, 120);
+	assert.equal(lapsePlan(estimate(100), defaults, 60).intervalS, 300);
+	assert.equal(lapsePlan(estimate(1.9), defaults, 20).kind, 'off', 'under two hours is off whatever ran');
+	assert.equal(lapsePlan({ kind: 'charging', reason: '' }, defaults, 20).kind, 'off');
+	assert.equal(lapsePlan(estimate(10), parseConfig({ lapse: false }), 60).kind, 'off');
 });
 
 test('the lapse plan is off when disabled, charging, learning or under two hours, else the smallest band under 900 frames', () => {

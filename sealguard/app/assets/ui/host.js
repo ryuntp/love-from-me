@@ -21,7 +21,7 @@
 /**
  * @typedef {{kind: 'hello'}
  *   | {kind: 'startWatch', session: SessionId, since: Millis, deterrent: boolean} | {kind: 'stopWatch', session: SessionId}
- *   | {kind: 'startRecording', clip: Clip, preRollS: number} | {kind: 'stopRecording', clip: ClipId}
+ *   | {kind: 'startRecording', clip: Clip, preRollS: number} | {kind: 'stopRecording', id: ClipId}
  *   | {kind: 'saveEvent', event: EventCore, pack: string} | {kind: 'deleteEvents', ids: EventId[]}
  *   | {kind: 'startLapse', session: SessionId, intervalS: number} | {kind: 'stopLapse', session: SessionId}
  *   | {kind: 'exportEvent', id: EventId} | {kind: 'setKill', on: boolean} | {kind: 'openAutostart'}} Command
@@ -39,8 +39,7 @@ const WHEELS = ['fl', 'fr', 'rl', 'rr'];
 const CHARGE_STATES = ['unplugged', 'plugged', 'charging'];
 const THEMES = ['dark', 'light'];
 const AUTOSTART = ['allowed', 'blocked', 'unknown'];
-/** Media may come only from inline data, the host's own files or a loopback stream; anything else is refused. */
-const ALLOWED_URL = /^(data:(image|video)\/|file:\/\/\/|blob:|https?:\/\/(127\.0\.0\.1|localhost)([:/]|$))/;
+const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost'];
 
 function Rejection(reason) { this.reason = reason; }
 function fail(path, what) { throw new Rejection(path + ' ' + what); }
@@ -58,7 +57,25 @@ function list(v, path, item) {
 	return v.map(function (x, i) { return item(x, path + '[' + i + ']'); });
 }
 function nullable(v, path, parse) { return v === null || v === undefined ? null : parse(v, path); }
-function url(v, path) { if (!ALLOWED_URL.test(str(v, path))) fail(path, 'must be a data, file, blob or loopback url'); return v; }
+/** Media may come only from inline image or video data, the host's own files, a blob, or a plain http loopback stream, judged on the parsed URL so no userinfo or host suffix can point an img at the network. */
+function allowedUrl(text) {
+	let u = null;
+	try { u = new URL(text); } catch (e) { return false; }
+	if (u.protocol === 'data:') return /^(image|video)\//.test(u.pathname);
+	if (u.protocol === 'blob:' || u.protocol === 'file:') return true;
+	return u.protocol === 'http:' && LOOPBACK_HOSTS.indexOf(u.hostname) >= 0 && u.username === '' && u.password === '';
+}
+function url(v, path) { if (!allowedUrl(str(v, path))) fail(path, 'must be a data, file, blob or loopback url'); return v; }
+/** Rejects a list whose items repeat a key, naming the repeat and the item it repeats. */
+function unique(items, path, field, keyOf) {
+	const seen = new Map();
+	items.forEach(function (item, i) {
+		const key = keyOf(item);
+		if (seen.has(key)) fail(path + '[' + i + '].' + field, 'must not repeat ' + path + '[' + seen.get(key) + ']');
+		seen.set(key, i);
+	});
+	return items;
+}
 function cameras(v, path) {
 	const ids = list(v, path, function (x, p) { return oneOf(x, p, CAMERAS); });
 	if (ids.length === 0) fail(path, 'must name a camera');
@@ -118,8 +135,9 @@ function status(m) {
 	return {
 		version: str(m.version, 'version'), killed: bool(m.killed, 'killed'), theme: oneOf(m.theme, 'theme', THEMES), autostart: oneOf(m.autostart, 'autostart', AUTOSTART),
 		watch: nullable(m.watch, 'watch', watch), recording: nullable(m.recording, 'recording', clip), lapse: nullable(m.lapse, 'lapse', lapse),
-		cameras: list(m.cameras === undefined ? [] : m.cameras, 'cameras', camera), mosaic: nullable(m.mosaic, 'mosaic', mosaic),
-		selfTest: list(m.selfTest === undefined ? [] : m.selfTest, 'selfTest', selfTest),
+		cameras: unique(list(m.cameras === undefined ? [] : m.cameras, 'cameras', camera), 'cameras', 'id', function (c) { return c.id; }),
+		mosaic: nullable(m.mosaic, 'mosaic', mosaic),
+		selfTest: unique(list(m.selfTest === undefined ? [] : m.selfTest, 'selfTest', selfTest), 'selfTest', 'name', function (t) { return t.name; }),
 	};
 }
 function event(v, path) {
@@ -137,7 +155,7 @@ const MESSAGES = {
 	vehicle: function (m) { return { kind: 'vehicle', snapshot: snapshot(m) }; },
 	detection: function (m) { return { kind: 'detection', at: millis(m.at, 'at'), trigger: oneOf(m.trigger, 'trigger', TRIGGERS), cameras: cameras(m.cameras, 'cameras'), score: num(m.score, 'score', 0, 1) }; },
 	status: function (m) { return { kind: 'status', status: status(m) }; },
-	events: function (m) { return { kind: 'events', events: list(m.events, 'events', event) }; },
+	events: function (m) { return { kind: 'events', events: unique(list(m.events, 'events', event), 'events', 'id', function (e) { return e.id; }) }; },
 	exported: function (m) { return { kind: 'exported', id: str(m.id, 'id'), ok: bool(m.ok, 'ok'), where: text(m.where) }; },
 };
 

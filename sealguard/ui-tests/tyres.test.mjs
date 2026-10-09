@@ -61,6 +61,8 @@ test('one wheel falling 0.7 kPa a day and 0.5 kPa a day faster than its siblings
 	assert.ok(Math.abs(rl.kpa20 - 232) < 0.01);
 	const slow = assessTyres(tyreHistory(14, (i) => ({ fl: 240, fr: 240, rl: 240 - 0.5 * i, rr: 240 })), T0);
 	assert.equal(slow.verdict, 'steady', 'half a kPa a day is within normal diffusion');
+	assert.equal(slow.reason, 'Rear left is losing 0.5 kPa a day, under the 0.7 that marks a leak', 'the steady reason names the wheel instead of claiming all four hold');
+	assert.equal(assessTyres(tyreHistory(14, (i) => ({ fl: 240, fr: 240, rl: 240 - 0.3 * i, rr: 240 })), T0).reason, 'All four are holding pressure over 14 days');
 	const weather = assessTyres(tyreHistory(14, (i) => ({ fl: 240 - 0.4 * i, fr: 240 - 0.4 * i, rl: 244 - 1.4 * i, rr: 240 - 0.4 * i })), T0);
 	assert.equal(weather.verdict, 'leak', 'a leak shows through a cooling week');
 	assert.equal(weather.wheel, 'rl');
@@ -69,13 +71,35 @@ test('one wheel falling 0.7 kPa a day and 0.5 kPa a day faster than its siblings
 	assert.match(front.reason, /^Front left is losing 0\.9 kPa a day/);
 });
 
-test('all four falling together is steady and the reason says so', () => {
+test('all four falling at the leak rate is watch, named as a set, because no sibling comparison can clear it', () => {
 	const h = assessTyres(tyreHistory(10, (i) => ({ fl: 240 - i, fr: 241 - i, rl: 239 - i, rr: 240 - i })), T0);
-	assert.equal(h.verdict, 'steady');
-	assert.equal(h.reason, 'All four are losing pressure together, as weather does');
+	assert.equal(h.verdict, 'watch');
+	assert.deepEqual(h.wheels, ['fl', 'fr', 'rl', 'rr']);
+	assert.equal(h.reason, 'All four are losing about 7 kPa a week, so check the pressures');
+	assert.equal(h.tyres.length, 4);
 	const close = assessTyres(tyreHistory(10, (i) => ({ fl: 240 - 0.9 * i, fr: 240 - 0.9 * i, rl: 240 - 1.2 * i, rr: 240 - 0.9 * i })), T0);
-	assert.equal(close.verdict, 'steady', '0.3 kPa a day faster than the siblings is not a leak');
-	assert.equal(close.reason, 'All four are losing pressure together, as weather does');
+	assert.equal(close.verdict, 'watch', '0.3 kPa a day faster than the siblings is not a leak, but 0.9 a day on all four is not steady');
+	assert.equal(close.reason, 'All four are losing about 6 kPa a week, so check the pressures');
+});
+
+test('every wheel that meets both rules is flagged and named, and loss at the leak rate on some wheels is watch, not steady', () => {
+	const two = assessTyres(tyreHistory(14, (i) => ({ fl: 240 - 1.0 * i, fr: 240, rl: 244 - 1.2 * i, rr: 240 })), T0);
+	assert.equal(two.verdict, 'leak');
+	assert.equal(two.wheel, 'rl', 'the fastest wheel');
+	assert.deepEqual(two.wheels, ['fl', 'rl']);
+	assert.equal(two.reason, 'Front left and rear left are losing 1.0 and 1.2 kPa a day');
+	const three = assessTyres(tyreHistory(14, (i) => ({ fl: 240 - i, fr: 240 - i, rl: 240 - i, rr: 240 })), T0);
+	assert.equal(three.verdict, 'watch');
+	assert.deepEqual(three.wheels, ['fl', 'fr', 'rl']);
+	assert.equal(three.reason, 'Front left, front right and rear left are losing 1.0, 1.0 and 1.0 kPa a day, so check the pressures');
+	const straddle = assessTyres(tyreHistory(14, (i) => ({ fl: 240 - 0.9 * i, fr: 240 - 0.8 * i, rl: 240 - 0.75 * i, rr: 240 - 0.65 * i })), T0);
+	assert.equal(straddle.verdict, 'watch');
+	assert.deepEqual(straddle.wheels, ['fl', 'fr', 'rl']);
+	const one = assessTyres(tyreHistory(14, (i) => ({ fl: 240, fr: 240 - 0.8 * i, rl: 240 - 0.4 * i, rr: 240 - 0.4 * i })), T0);
+	assert.equal(one.verdict, 'watch', '0.4 faster than the siblings is not a leak, but 0.8 a day is not steady');
+	assert.equal(one.reason, 'Front right is losing 0.8 kPa a day, so check the pressures');
+	const single = assessTyres(tyreHistory(14, (i) => ({ fl: 240, fr: 241, rl: 245 - 1.0 * i, rr: 239 })), T0);
+	assert.deepEqual(single.wheels, ['rl'], 'a single leak lists itself');
 });
 
 test('only the last 21 days count and a single odd day does not move a Theil-Sen slope', () => {

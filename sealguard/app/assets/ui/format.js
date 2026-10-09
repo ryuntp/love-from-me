@@ -6,16 +6,19 @@ const DAY = 24 * HOUR;
 function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
 export const fmt = {
-	volts(v) { return v.toFixed(1) + ' V'; },
+	volts(v, digits) { return v.toFixed(digits === undefined ? 1 : digits) + ' V'; },
 	pct(p) { return Math.round(p) + '%'; },
 	kpa(k) { return Math.round(k) + ' kPa'; },
 	celsius(c) { return Math.round(c) + '°C'; },
 	kw(kw) { return (kw >= 10 ? Math.round(kw) : kw.toFixed(1)) + ' kW'; },
 	span(ms) {
-		if (ms < MINUTE) return Math.max(0, Math.round(ms / 1000)) + ' s';
-		if (ms < HOUR) return Math.round(ms / MINUTE) + ' min';
-		const h = Math.floor(ms / HOUR);
-		const m = Math.round((ms - h * HOUR) / MINUTE);
+		// The whole span is rounded to its unit before it is split, so no part can round up to 60.
+		const seconds = Math.max(0, Math.round(ms / 1000));
+		if (seconds < 60) return seconds + ' s';
+		const minutes = Math.round(ms / MINUTE);
+		if (minutes < 60) return minutes + ' min';
+		const h = Math.floor(minutes / 60);
+		const m = minutes % 60;
 		return m === 0 ? h + ' h' : h + ' h ' + m + ' min';
 	},
 	hours(h) {

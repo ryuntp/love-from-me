@@ -146,24 +146,25 @@ export function loadHistory(storage, now) {
 	return { latest: null, recent: [], kept: kept };
 }
 
-/** Rewrites only the day key of the newest kept sample and prunes stale days; on a refused write it drops the oldest day and retries, and reports false when nothing more can give. @param {StorageLike} storage @param {History} history @returns {boolean} */
+/** Rewrites only the day key of the newest kept sample and prunes stale days; on a refused write it drops only days past KEEP.days, oldest first, and reports false once none is left, so a full disk never costs a day inside the window. @param {StorageLike} storage @param {History} history @returns {boolean} */
 export function saveHistory(storage, history) {
 	const kept = history.kept;
 	if (kept.length === 0) return true;
-	const key = dayKey(kept[kept.length - 1].at);
+	const newest = kept[kept.length - 1].at;
+	const key = dayKey(newest);
 	let first = kept.length - 1;
 	while (first > 0 && dayKey(kept[first - 1].at) === key) first--;
 	const text = JSON.stringify(kept.slice(first).map(pack));
+	const endsBefore = function (k, horizon) { return dayStart(k.slice(PREFIX.length)) + DAY <= horizon; };
 	try {
 		const keys = historyKeys(storage).filter(function (k) { return k !== PREFIX + key; });
-		const horizon = kept[kept.length - 1].at - STORED_DAYS * DAY;
-		while (keys.length && dayStart(keys[0].slice(PREFIX.length)) + DAY <= horizon) storage.removeItem(keys.shift());
+		while (keys.length && endsBefore(keys[0], newest - STORED_DAYS * DAY)) storage.removeItem(keys.shift());
 		for (;;) {
 			try {
 				storage.setItem(PREFIX + key, text);
 				return true;
 			} catch (e) {
-				if (keys.length === 0) return false;
+				if (!keys.length || !endsBefore(keys[0], newest - KEEP.days * DAY)) return false;
 				storage.removeItem(keys.shift());
 			}
 		}

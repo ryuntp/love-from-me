@@ -76,17 +76,22 @@ export function parkOf(at) { return { id: 'p' + at, at }; }
 /** Sentry state builders; reading defaults to a snapshot at the park's start. */
 export function idleState(over) {
 	const at = (over && over.park && over.park.at) || T0;
-	return Object.assign({ mode: 'idle', park: parkOf(at), reading: snapshot({ at }), lowSince: null, disarmed: false }, over || {});
+	return Object.assign({ mode: 'idle', park: parkOf(at), reading: snapshot({ at }), lowSince: null, lastClipAt: null, disarmed: false }, over || {});
 }
 export function armedState(over) {
 	const at = (over && over.park && over.park.at) || T0;
-	return Object.assign({ mode: 'armed', park: parkOf(at), reading: snapshot({ at }), lowSince: null, armedAt: at }, over || {});
+	return Object.assign({ mode: 'armed', park: parkOf(at), reading: snapshot({ at }), lowSince: null, lastClipAt: null, armedAt: at, deterrent: false }, over || {});
 }
 export function recordingState(over) {
 	const at = (over && over.park && over.park.at) || T0;
 	const startedAt = (over && over.clip && over.clip.startedAt) || at + MINUTE;
 	const clip = Object.assign({ id: 'c' + startedAt, trigger: 'motion', cameras: ['front'], startedAt, lastSeenAt: startedAt }, (over && over.clip) || {});
-	return Object.assign({ mode: 'recording', park: parkOf(at), reading: snapshot({ at }), lowSince: null, armedAt: at, clip }, over || {}, { clip });
+	return Object.assign({ mode: 'recording', park: parkOf(at), reading: snapshot({ at }), lowSince: null, lastClipAt: null, armedAt: at, deterrent: false, clip }, over || {}, { clip });
+}
+/** A halt on the 12V under the default floors; the reading defaults to 12.3 V at the park's start. */
+export function haltedState(over) {
+	const at = (over && over.park && over.park.at) || T0;
+	return Object.assign({ mode: 'halted', park: parkOf(at), reading: snapshot({ at, v12: 12.3 }), lowSince: null, lastClipAt: null, reason: 'v12', value: 12.3, at, floors: { v12: 12.4, soc: 20 } }, over || {});
 }
 
 export function hostStatus(over) {

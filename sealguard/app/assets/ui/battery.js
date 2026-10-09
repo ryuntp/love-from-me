@@ -24,14 +24,15 @@ function median(values) {
 	return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-/** One resting voltage per night: the median of samples two hours or more into a park with no charging. */
+/** One resting voltage per night: the median of samples two hours or more into a park with no charging. A charging sample restarts the clock, because the 12V is held high while the car charges and settles only afterwards. */
 function restingNights(series) {
 	const byDay = new Map();
 	let parkStart = null;
 	series.forEach(function (s) {
 		if (s.power !== 'off') { parkStart = null; return; }
 		if (parkStart === null) parkStart = s.at;
-		if (s.charge.state === 'charging' || s.at - parkStart < REST_AFTER_MS) return;
+		if (s.charge.state === 'charging') { parkStart = s.at; return; }
+		if (s.at - parkStart < REST_AFTER_MS) return;
 		const key = dayKey(s.at - NIGHT_SHIFT_MS);
 		if (!byDay.has(key)) byDay.set(key, { at: s.at, volts: [] });
 		byDay.get(key).volts.push(s.v12);
