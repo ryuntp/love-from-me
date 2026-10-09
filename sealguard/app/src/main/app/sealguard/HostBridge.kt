@@ -9,6 +9,8 @@ import org.json.JSONObject
 // The page's host adapter. Commands arrive as JSON text through post; replies go back through window.sealguardReceive.
 // This build carries no vehicle link, so it answers hello with an honest status and ignores every other command.
 class HostBridge(private val web: WebView, private val version: String) {
+	@Volatile private var helloSeen = false
+
 	@JavascriptInterface
 	fun post(text: String) {
 		val kind = try {
@@ -18,9 +20,15 @@ class HostBridge(private val web: WebView, private val version: String) {
 			""
 		}
 		if (kind == "hello") {
+			helloSeen = true
 			reply(status())
 			reply(JSONObject().put("v", 1).put("t", "events").put("events", JSONArray()))
 		}
+	}
+
+	// Sends the current status unprompted, which is how a theme change reaches the page; before hello the page has no receiver yet.
+	fun pushStatus() {
+		if (helloSeen) reply(status())
 	}
 
 	private fun status(): JSONObject {
