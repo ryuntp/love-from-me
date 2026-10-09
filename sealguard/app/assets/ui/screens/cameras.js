@@ -1,6 +1,7 @@
 import { h, mosaic, syncList } from '../ui.js';
 
-/** @typedef {{mosaic: Mosaic|null, focus: CameraId|null, cameras: {id: CameraId, label: string, fps: string}[], offline: string}} CamerasModel */
+/** @typedef {{mosaic: Mosaic|null, focus: CameraId|null, cameras: {id: CameraId, quadrant: number, label: string, detail: string}[], offline: string}} CamerasModel
+ * cameras follows mosaic.layout, one entry per quadrant; detail is the frame rate, or Offline for a camera the host left out of its list. */
 
 /** Owner names for the four surround cameras; events and diagnostics reuse them. */
 export const CAMERA_NAMES = { front: 'Front', rear: 'Rear', left: 'Left', right: 'Right' };
@@ -13,25 +14,28 @@ export const cameras = {
 	title: 'Cameras',
 	icon: 'camera',
 
-	/** Live mosaic, focused quadrant and per-camera labels in quadrant order. @param {World} world @param {Millis} now @returns {CamerasModel} */
+	/** Live mosaic, focused quadrant and one label per quadrant of the layout. @param {World} world @param {Millis} now @returns {CamerasModel} */
 	model(world, now) {
 		const host = world.host;
 		const source = host ? host.mosaic : null;
 		const layout = source ? source.layout : [];
-		const list = host ? host.cameras.slice() : [];
-		list.sort(function (a, b) { return quadrant(layout, a.id) - quadrant(layout, b.id); });
+		const reported = {};
+		if (host) host.cameras.forEach(function (c) { reported[c.id] = c; });
 		const focus = world.view.focus && layout.indexOf(world.view.focus) >= 0 ? world.view.focus : null;
 		return {
 			mosaic: source,
 			focus: focus,
-			cameras: list.map(function (c) { return { id: c.id, label: cameraName(c.id), fps: Math.round(c.fps) + ' fps' }; }),
+			cameras: layout.map(function (id, i) {
+				const c = reported[id] || null;
+				return { id: id, quadrant: i, label: cameraName(id), detail: c ? Math.round(c.fps) + ' fps' : 'Offline' };
+			}),
 			offline: !host ? 'Waiting for the car.'
 				: host.killed ? 'The kill switch is on. The surround cameras stay off until you turn it off in Diagnostics.'
 				: source ? '' : 'The surround cameras are off. They come on while sentry is armed.',
 		};
 	},
 
-	/** Full-width image mosaic; a tap dispatches view focus. @param {HTMLElement} root @param {(i: Intent) => void} dispatch */
+	/** Full-width image mosaic with a label pinned to each quadrant; a tap dispatches view focus. @param {HTMLElement} root @param {(i: Intent) => void} dispatch */
 	mount(root, dispatch) {
 		const live = mosaic('img', function (camera) { dispatch({ kind: 'view', patch: { focus: camera } }); });
 		const labels = h('div', { class: 'stage-labels' });
@@ -46,7 +50,8 @@ export const cameras = {
 				syncList(labels, m.cameras, function (c) { return c.id; },
 					function () { return h('span', { class: 'stage-label' }); },
 					function (el, c) {
-						el.textContent = c.label + ' · ' + c.fps;
+						el.setAttribute('data-quadrant', String(c.quadrant));
+						el.textContent = c.label + ' · ' + c.detail;
 						el.classList.toggle('active', c.id === m.focus);
 					});
 				labels.hidden = !m.mosaic;
@@ -58,9 +63,3 @@ export const cameras = {
 		};
 	},
 };
-
-function quadrant(layout, id) {
-	const i = layout.indexOf(id);
-	return i < 0 ? layout.length : i;
-}
-

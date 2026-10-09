@@ -24,6 +24,7 @@ export function batteryFinding(health) {
 /** Owner-facing finding from a TyreHealth; the plan view and the dashboard tile name the wheel. @param {TyreHealth} health @returns {Finding} */
 export function tyreFinding(health) {
 	if (health.verdict === 'leak') return { level: 'act', verdict: 'Losing air', reason: health.reason };
+	if (health.verdict === 'watch') return { level: 'watch', verdict: 'Losing pressure', reason: health.reason };
 	if (health.verdict === 'steady') return { level: 'good', verdict: 'Holding pressure', reason: health.reason };
 	return { level: 'unknown', verdict: 'Still learning', reason: health.reason };
 }
@@ -38,7 +39,7 @@ export function tyreRows(health, latest) {
 			wheel: wheel,
 			kpa: reading ? fmt.kpa(reading.kpa) : 'No reading',
 			trend: !trend ? 'Trend after a few days' : Math.abs(trend.kpaPerWeek) < 1 ? 'Steady' : (trend.kpaPerWeek > 0 ? '+' : '−') + Math.abs(trend.kpaPerWeek).toFixed(0) + ' kPa a week',
-			flagged: health.verdict === 'leak' && health.wheel === wheel,
+			flagged: Array.isArray(health.wheels) && health.wheels.indexOf(wheel) !== -1,
 		};
 	});
 }

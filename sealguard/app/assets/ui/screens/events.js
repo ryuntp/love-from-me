@@ -4,7 +4,9 @@ import { h, icon, mosaic, segmented, sheet, syncList } from '../ui.js';
 import { cameraName } from './cameras.js';
 
 /** @typedef {{id: EventId, time: string, trigger: Trigger, cameras: string, duration: string, thumbUrl: string}} EventRow */
-/** @typedef {{filter: Trigger|'all', groups: {label: string, rows: EventRow[]}[], empty: string, sheet: {id: EventId, title: string, detail: string, player: Mosaic & {poster: string}, focus: CameraId|null}|null}} EventsModel  the player's poster is the event thumbnail, shown until the clip plays or when it cannot */
+/** @typedef {{filter: Trigger|'all', groups: {label: string, rows: EventRow[]}[], empty: string,
+ *   sheet: {id: EventId, title: string, detail: string, player: Mosaic & {poster: string}, focus: CameraId|null, confirm: {title: string, body: string, action: string}|null}|null}} EventsModel
+ * The player's poster is the event thumbnail, shown until the clip plays or when it cannot. confirm is set while the sheet asks before a delete. */
 
 export const TRIGGER_NAMES = { motion: 'Motion', impact: 'Impact' };
 const FILTERS = [{ value: 'all', label: 'All' }, { value: 'motion', label: 'Motion' }, { value: 'impact', label: 'Impact' }];
@@ -22,7 +24,7 @@ export const events = {
 	title: 'Events',
 	icon: 'film',
 
-	/** Timeline from recordings.js under view.filter, and the open sheet. @param {World} world @param {Millis} now @returns {EventsModel} */
+	/** Timeline from recordings.js under view.filter, and the open sheet with its delete confirmation. @param {World} world @param {Millis} now @returns {EventsModel} */
 	model(world, now) {
 		const filter = world.view.filter;
 		const groups = timeline(world.events, filter, now).map(function (g) {
@@ -33,23 +35,25 @@ export const events = {
 				}),
 			};
 		});
-		const open = world.view.sheet && world.view.sheet.kind === 'event' ? world.view.sheet.id : null;
-		const event = open === null ? null : world.events.filter(function (e) { return e.id === open; })[0] || null;
+		const sheetView = world.view.sheet && world.view.sheet.kind === 'event' ? world.view.sheet : null;
+		const event = sheetView === null ? null : world.events.filter(function (e) { return e.id === sheetView.id; })[0] || null;
+		const title = event ? (TRIGGER_NAMES[event.trigger] || event.trigger) + ', ' + dayWord(fmt.day(event.startedAt, now)) + ' ' + fmt.time(event.startedAt) : '';
 		return {
 			filter: filter,
 			groups: groups,
 			empty: groups.length ? '' : EMPTY[filter],
 			sheet: event ? {
 				id: event.id,
-				title: (TRIGGER_NAMES[event.trigger] || event.trigger) + ', ' + dayWord(fmt.day(event.startedAt, now)) + ' ' + fmt.time(event.startedAt),
+				title: title,
 				detail: camerasLine(event.cameras) + ' · ' + fmt.span(event.endedAt - event.startedAt),
 				player: { url: event.clipUrl, layout: event.layout, poster: event.thumbUrl },
 				focus: world.view.focus && event.layout.indexOf(world.view.focus) >= 0 ? world.view.focus : null,
+				confirm: sheetView.confirm ? { title: 'Delete this recording?', body: title + ' will be deleted from the car. It cannot be recovered.', action: 'Delete recording' } : null,
 			} : null,
 		};
 	},
 
-	/** Filter segments, keyed rows, and the sheet with the video mosaic, Export incident pack, and Delete in red. @param {HTMLElement} root @param {(i: Intent) => void} dispatch */
+	/** Filter segments, keyed rows, and the sheet with the video mosaic, Export incident pack, and Delete in red, which asks once before dispatching. @param {HTMLElement} root @param {(i: Intent) => void} dispatch */
 	mount(root, dispatch) {
 		const filter = segmented(FILTERS, function (value) { dispatch({ kind: 'view', patch: { filter: value } }); });
 		const groups = h('div', { class: 'content groups' });
@@ -62,7 +66,9 @@ export const events = {
 		const sheetDetail = h('p', { class: 'sheet-detail' });
 		const playerHint = h('p', { class: 'hint' });
 		let openId = null;
-		const sheetContent = h('div', { class: 'sheet-body' }, [
+		const askDelete = function () { if (openId) dispatch({ kind: 'view', patch: { sheet: { kind: 'event', id: openId, confirm: true } } }); };
+		const keep = function () { if (openId) dispatch({ kind: 'view', patch: { sheet: { kind: 'event', id: openId } } }); };
+		const sheetContent = h('div', { class: 'sheet-body sheet-player' }, [
 			h('div', { class: 'sheet-head' }, [
 				h('div', {}, [sheetTitle, sheetDetail]),
 				h('button', { class: 'icon-button hit', type: 'button', 'aria-label': 'Close', onclick: closeSheet }, [icon('close')]),
@@ -71,11 +77,22 @@ export const events = {
 			playerHint,
 			h('div', { class: 'sheet-actions' }, [
 				h('button', { class: 'button hit', type: 'button', onclick: function () { if (openId) dispatch({ kind: 'export', id: openId }); } }, [icon('share'), 'Export incident pack']),
-				h('button', { class: 'button destructive hit', type: 'button', onclick: function () {
-					if (!openId) return;
-					dispatch({ kind: 'delete', id: openId });
-					closeSheet();
-				} }, [icon('trash'), 'Delete']),
+				h('button', { class: 'button destructive hit', type: 'button', onclick: askDelete }, [icon('trash'), 'Delete']),
+			]),
+		]);
+		const confirmTitle = h('h2', { class: 'sheet-title' });
+		const confirmBody = h('p', { class: 'sheet-detail' });
+		const confirmButton = h('button', { class: 'button destructive filled hit', type: 'button', onclick: function () {
+			if (openId) dispatch({ kind: 'delete', id: openId });
+			closeSheet();
+		} }, [icon('trash'), '']);
+		const confirmLabel = confirmButton.lastChild;
+		const confirmContent = h('div', { class: 'sheet-body' }, [
+			h('div', { class: 'sheet-head' }, [confirmTitle, h('button', { class: 'icon-button hit', type: 'button', 'aria-label': 'Close', onclick: closeSheet }, [icon('close')])]),
+			confirmBody,
+			h('div', { class: 'sheet-actions' }, [
+				h('button', { class: 'button hit', type: 'button', onclick: keep }, ['Keep it']),
+				confirmButton,
 			]),
 		]);
 		const panel = sheet(closeSheet);
@@ -113,7 +130,14 @@ export const events = {
 				syncList(groups, m.groups, function (g) { return g.label; }, createGroup, updateGroup);
 				emptyText.textContent = m.empty;
 				empty.hidden = !m.empty;
-				if (m.sheet) {
+				if (m.sheet && m.sheet.confirm) {
+					openId = m.sheet.id;
+					confirmTitle.textContent = m.sheet.confirm.title;
+					confirmBody.textContent = m.sheet.confirm.body;
+					confirmLabel.textContent = m.sheet.confirm.action;
+					player.hide();
+					panel.open(confirmContent);
+				} else if (m.sheet) {
 					openId = m.sheet.id;
 					sheetTitle.textContent = m.sheet.title;
 					sheetDetail.textContent = m.sheet.detail;

@@ -32,7 +32,6 @@ button {
 	cursor: pointer;
 	text-align: inherit;
 	-webkit-appearance: none;
-	appearance: none;
 }
 button:disabled { cursor: default; }
 a { color: inherit; text-decoration: none; }
@@ -200,7 +199,7 @@ img, video, svg { display: block; }
 /* Hero */
 .hero {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 640px;
+	grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 	column-gap: var(--space-4);
 }
 .hero-main { display: grid; align-content: start; row-gap: var(--space-3); }
@@ -404,6 +403,7 @@ img, video, svg { display: block; }
 	text-align: right;
 }
 .row-value[data-tone] { color: var(--tone); }
+.row-status { padding-right: var(--space-2); white-space: nowrap; }
 .row > .icon { margin-left: var(--space-2); color: var(--label-tertiary); }
 .ok-dot { flex: 0 0 auto; width: 16px; height: 16px; margin-left: var(--space-2); border-radius: 50%; background: var(--label-tertiary); }
 .ok-dot[data-ok=true] { background: var(--green); }
@@ -630,7 +630,12 @@ img, video, svg { display: block; }
 	font-weight: var(--weight-caption);
 	font-variant-numeric: tabular-nums;
 }
+.stage-label[data-quadrant="0"] { grid-area: 1 / 1; }
+.stage-label[data-quadrant="1"] { grid-area: 1 / 2; }
+.stage-label[data-quadrant="2"] { grid-area: 2 / 1; }
+.stage-label[data-quadrant="3"] { grid-area: 2 / 2; }
 .stage[data-focused] .stage-labels { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.stage[data-focused] .stage-label { grid-area: auto; }
 .stage[data-focused] .stage-label { display: none; }
 .stage[data-focused] .stage-label.active { display: block; }
 .stage-empty {
@@ -782,4 +787,27 @@ img, video, svg { display: block; }
 	.car-grid { grid-template-columns: 1fr; }
 	.tyres { gap: var(--space-4) 140px; }
 	.tyres::before { width: 120px; margin-left: -60px; }
+}
+
+/* Narrow landscape: the 1280 by 720 viewport a density of 1.5 reports leaves 860 px beside the sidebar, so the Car cards
+	stack, the tiles wrap their words, and the event sheet puts its words and actions beside the player instead of under it. */
+@media (orientation: landscape) and (max-width: 1400px) {
+	.hero { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+	.car-grid { grid-template-columns: 1fr; }
+	.tyres { gap: var(--space-4) 140px; }
+	.tyres::before { width: 120px; margin-left: -60px; }
+	.tile-verdict, .tile-detail { white-space: normal; }
+}
+@media (orientation: landscape) and (max-height: 800px) {
+	.sheet { width: 1180px; max-width: 94%; }
+	.sheet-player {
+		grid-template-columns: minmax(0, 1fr) 400px;
+		grid-template-areas: "player head" "player hint" "player actions";
+		align-content: start;
+		column-gap: var(--space-4);
+	}
+	.sheet-player .sheet-head { grid-area: head; }
+	.sheet-player .mosaic { grid-area: player; }
+	.sheet-player .hint { grid-area: hint; }
+	.sheet-player .sheet-actions { grid-area: actions; align-self: end; }
 }

@@ -259,11 +259,12 @@ export function mosaic(kind, onFocus) {
 	};
 }
 
-/** Inline SVG line for the nightly 12V trend; set takes the voltages oldest first. @returns {Control} */
+/** Inline SVG line for the nightly 12V trend; set takes the voltages oldest first. The chart spans at least half a volt, so a 10 mV wobble reads as the flat line it is. @returns {Control} */
 export function sparkline() {
 	const W = 600;
 	const H = 120;
 	const PAD = 10;
+	const MIN_SPAN_V = 0.5;
 	const base = svgEl('line', { class: 'sparkline-base', x1: PAD, x2: W - PAD, y1: H - PAD, y2: H - PAD, 'stroke-width': '2', 'vector-effect': 'non-scaling-stroke' });
 	const line = svgEl('polyline', { class: 'sparkline-line', fill: 'none', 'stroke-width': '4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'vector-effect': 'non-scaling-stroke' });
 	const dot = svgEl('circle', { class: 'sparkline-dot', r: '0' });
@@ -274,10 +275,11 @@ export function sparkline() {
 			if (!values.length) { line.removeAttribute('points'); dot.setAttribute('r', '0'); return; }
 			const lo = Math.min.apply(null, values);
 			const hi = Math.max.apply(null, values);
-			const span = hi - lo || 1;
+			const span = Math.max(hi - lo, MIN_SPAN_V);
+			const top = (hi + lo + span) / 2;
 			const points = values.map(function (v, i) {
 				const x = values.length === 1 ? W / 2 : PAD + (W - 2 * PAD) * i / (values.length - 1);
-				const y = PAD + (H - 2 * PAD) * (hi - v) / span;
+				const y = PAD + (H - 2 * PAD) * (top - v) / span;
 				return [x, y];
 			});
 			line.setAttribute('points', points.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '));
@@ -303,19 +305,27 @@ export function showAlert(doc, alert) {
 	setTimeout(function () { el.classList.remove('shown'); setTimeout(remove, 400); }, 6000);
 }
 
-/** Reconciles parent's children to items by key: creates, moves and updates in place so unchanged rows keep their nodes. @template T @param {HTMLElement} parent @param {T[]} items @param {(item: T) => string} keyOf @param {(item: T) => HTMLElement} create @param {(el: HTMLElement, item: T) => void} update */
+/** Reconciles parent's children to items by key: creates, moves and updates in place so unchanged rows keep their nodes, and removes every child it did not reuse. @template T @param {HTMLElement} parent @param {T[]} items @param {(item: T) => string} keyOf @param {(item: T) => HTMLElement} create @param {(el: HTMLElement, item: T) => void} update */
 export function syncList(parent, items, keyOf, create, update) {
-	const stale = new Map();
-	for (let child = parent.firstChild; child; child = child.nextSibling) stale.set(child.getAttribute('data-key'), child);
+	const pool = new Map();
+	for (let child = parent.firstChild; child; child = child.nextSibling) {
+		const key = child.getAttribute('data-key');
+		if (pool.has(key)) pool.get(key).push(child); else pool.set(key, [child]);
+	}
+	const kept = new Set();
 	let cursor = parent.firstChild;
 	items.forEach(function (item) {
 		const key = keyOf(item);
-		let el = stale.get(key);
-		if (el) stale.delete(key);
-		else { el = create(item); el.setAttribute('data-key', key); }
+		let el = pool.has(key) && pool.get(key).length ? pool.get(key).shift() : null;
+		if (el === null) { el = create(item); el.setAttribute('data-key', key); }
+		kept.add(el);
 		update(el, item);
 		if (el === cursor) cursor = cursor.nextSibling;
 		else parent.insertBefore(el, cursor);
 	});
-	stale.forEach(function (el) { parent.removeChild(el); });
+	// A host that repeats a key once left its first node behind forever; walking the children removes any node not kept.
+	for (let child = parent.firstChild, next = null; child; child = next) {
+		next = child.nextSibling;
+		if (!kept.has(child)) parent.removeChild(child);
+	}
 }

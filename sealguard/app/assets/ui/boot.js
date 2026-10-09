@@ -1,6 +1,6 @@
 // The DOM shell: the only module that may touch window and document. It mounts navigation and every screen once,
 // turns the hash into view intents, applies theme and motion, renders once per frame after a change and
-// draws the night surface over an armed, untouched car.
+// draws the night surface over a parked, untouched car.
 import { createApp } from './app.js';
 import { sentryStatus } from './sentry.js';
 import { h, navigation, largeTitle, showAlert, icon } from './ui.js';
@@ -48,7 +48,7 @@ export function boot(win, bridge, clock) {
 
 	let shown = null;
 	let frame = 0;
-	let watching = false;
+	let parked = false;
 	let lastTouch = clock.now();
 	function show(route) {
 		if (shown === route) return;
@@ -73,8 +73,10 @@ export function boot(win, bridge, clock) {
 		const status = sentryStatus(world.sentry, world.config, now);
 		nav.status(status.tone, status.title);
 		night.setAttribute('data-tone', status.tone);
-		watching = status.tone === 'armed' || status.tone === 'recording';
-		if (!watching) night.hidden = true;
+		// The surface covers every parked mode, so a halt at night turns the glyph red instead of lighting the cabin.
+		// Idle is the one disarmed tone that can arm; driving, off and starting cannot.
+		parked = status.tone !== 'disarmed' || status.canArm;
+		if (!parked) night.hidden = true;
 	}
 	app.subscribe(function () { if (!frame) frame = win.requestAnimationFrame(render); });
 
@@ -91,6 +93,6 @@ export function boot(win, bridge, clock) {
 	doc.addEventListener('keydown', touched, true);
 	night.addEventListener('click', function (e) { e.stopPropagation(); touched(); night.hidden = true; });
 	clock.every(1000, function () {
-		if (watching && night.hidden && clock.now() - lastTouch >= NIGHT_AFTER_MS) night.hidden = false;
+		if (parked && night.hidden && clock.now() - lastTouch >= NIGHT_AFTER_MS) night.hidden = false;
 	});
 }

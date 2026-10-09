@@ -20,6 +20,7 @@ if (window.SealGuardHost) {
 	const params = new URLSearchParams(window.location.search);
 	const scenario = params.get('scenario') || 'night';
 	const speed = Number(params.get('speed')) || 1;
+	const advance = Number(params.get('advance')) || 0;
 	const theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 	// The sandbox is treated as already onboarded: the screenshot runner opens each route in a fresh profile and
 	// expects that route, and #/onboarding still shows the flow on request.
@@ -28,6 +29,8 @@ if (window.SealGuardHost) {
 	const sim = createSimulator(scenario, 7, theme);
 	boot(window, sim.bridge, sim.clock);
 	sim.advanceBy(0);
+	// advance jumps the scenario this many seconds before the first frame, so the screenshot runner reaches a halt or a recording without waiting it out.
+	if (advance > 0) sim.advanceBy(advance * 1000);
 	window.setInterval(function () { sim.advanceBy(1000 * speed); }, 1000);
 }
 </script>

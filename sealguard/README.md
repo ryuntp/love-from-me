@@ -10,7 +10,7 @@ The app is HTML, CSS and plain ES modules inside an Android WebView. The UI live
 tools/bootstrap-toolchain.sh   # once; installs aapt2, apksigner, zipalign, dx, kotlinc and android.jar without the Android SDK
 tools/run-tests.sh             # node --test over ui-tests/, then JUnit over app/src/test when it exists
 tools/build-apk.sh             # build/sealguard-debug.apk, signed with a debug key
-tools/screenshot-ui.sh         # every screen at 1920x1080 and 1080x1920, dark and light, into build/screens/
+tools/screenshot-ui.sh         # every screen at 1920x1080, 1080x1920 and 1280x720, dark and light, plus the halted, recording, killed and sheet states, into build/screens/
 ```
 
 The page runs in a desktop browser too:

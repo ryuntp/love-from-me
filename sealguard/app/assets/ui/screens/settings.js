@@ -82,7 +82,7 @@ export const settings = {
 			footer: 'SealGuard is not affiliated with BYD.',
 			rows: [
 				{ label: 'Version', detail: '', control: { el: version, set: function () {} }, onTap: null, href: null, tone: null },
-				{ label: 'Typeface', detail: 'Inter, under the SIL Open Font License', control: null, onTap: null, href: 'fonts/LICENSE.txt', tone: null },
+				{ label: 'Typeface', detail: 'Inter, under the SIL Open Font License', control: null, onTap: null, href: null, tone: null },
 			],
 		});
 

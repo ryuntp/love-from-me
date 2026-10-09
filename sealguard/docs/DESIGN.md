@@ -6,6 +6,8 @@ The head unit is a 15.6 inch, 1920x1080 panel read at arm's length while seated.
 
 iOS point sizes assume a phone held 30 cm from the eye. The car screen sits about 70 cm away and is touched with a reaching arm, so every iOS size is multiplied by 1.5 and touch targets grow from 44 pt to 72 px minimum. Text never drops below 20 px.
 
+A head unit that reports a density of 1.5 gives the page a 1280 by 720 CSS viewport, so every layout must hold there as well as at 1920 by 1080. The hero mosaic takes a fraction of the hero width rather than a fixed width for that reason.
+
 ## Type
 
 Inter (SIL Open Font License) stands in for SF Pro. Inter Display for titles, Inter for everything else. Tabular numerals for voltages, pressures and timers.
@@ -33,7 +35,7 @@ Light and dark follow the head unit theme. Dark is the default because sentry is
 | bg.groupedSecondary | #FFFFFF | #1C1C1E |
 | bg.groupedTertiary | #F2F2F7 | #2C2C2E |
 | label.primary | #000000 | #FFFFFF |
-| label.secondary | rgba(60,60,67,0.60) | rgba(235,235,245,0.60) |
+| label.secondary | rgba(60,60,67,0.75) | rgba(235,235,245,0.60) |
 | label.tertiary | rgba(60,60,67,0.30) | rgba(235,235,245,0.30) |
 | separator | rgba(60,60,67,0.29) | rgba(84,84,88,0.60) |
 | fill.secondary | rgba(120,120,128,0.16) | rgba(120,120,128,0.32) |
@@ -43,6 +45,8 @@ Light and dark follow the head unit theme. Dark is the default because sentry is
 | orange | #FF9500 | #FF9F0A |
 | yellow | #FFCC00 | #FFD60A |
 | indigo | #5856D6 | #5E5CE6 |
+
+Light label.secondary is 0.75 rather than iOS's 0.60 because daylight in a car needs more contrast than a phone.
 
 Status mapping: armed is green, alert is red, recording is orange, disarmed is label.secondary.
 
@@ -65,4 +69,4 @@ Status mapping: armed is green, alert is red, recording is orange, disarmed is l
 
 ## Night and glare
 
-A parked car must not light up the cabin. The app never raises brightness, and the sentry screen is a near-black surface with one small status glyph. Deterrent flashes are opt-in.
+A parked car must not light up the cabin. The app never raises brightness, and the sentry screen is a near-black surface with one small status glyph. The surface stays for every parked mode, idle, armed, recording and halted, and the glyph carries the sentry tone, so a halt at night turns it red instead of lighting the cabin. Deterrent flashes are opt-in.

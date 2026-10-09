@@ -1,13 +1,17 @@
 import { fmt } from '../format.js';
-import { h, syncList, toggle } from '../ui.js';
+import { h, showAlert, syncList, toggle } from '../ui.js';
 import { cameraName } from './cameras.js';
 
-/** @typedef {{rows: {label: string, value: string, ok: boolean|null}[], selfTest: {name: string, ok: boolean, detail: string}[], killed: boolean}} DiagnosticsModel */
+/** @typedef {{rows: {label: string, value: string, ok: boolean|null}[], selfTest: {name: string, ok: boolean, detail: string}[], killed: boolean, killStatus: string, killAlert: Alert|null, now: Millis}} DiagnosticsModel
+ * killStatus reads Waiting for the car between a tap on the kill switch and the host's confirmation; killAlert is set once
+ * the wait has run out, and the mount shows it and clears the asked tap. now lets the mount stamp the next tap. */
 
 const POWER = { off: 'Off', acc: 'Accessory', on: 'On' };
 const AUTOSTART = { allowed: 'Allowed', blocked: 'Blocked by the car', unknown: 'Not checked yet' };
 const WAITING = 'Waiting for the car';
 const LINK_FRESH_MS = 30e3;
+const KILL_WAIT_MS = 10e3;
+const KILL_UNANSWERED = { kind: 'alert', tone: 'alert', title: 'The car did not answer', body: 'The kill switch did not change in ten seconds. The self test says what the car reports.' };
 
 function row(label, value, ok) { return { label: label, value: value, ok: ok }; }
 
@@ -16,7 +20,7 @@ export const diagnostics = {
 	title: 'Diagnostics',
 	icon: 'wrench',
 
-	/** Camera ids and fps, power level, 12V and HV voltages, SoC, link health, self-test, kill state. @param {World} world @param {Millis} now @returns {DiagnosticsModel} */
+	/** Camera ids and fps, power level, 12V and HV voltages, SoC, the vehicle link's age, self-test, kill state and the pending kill tap. @param {World} world @param {Millis} now @returns {DiagnosticsModel} */
 	model(world, now) {
 		const host = world.host;
 		const latest = world.history.latest;
@@ -32,24 +36,40 @@ export const diagnostics = {
 			rows.push(row('12V battery', fmt.volts(latest.v12) + (latest.v12Low ? ', low' : ''), !latest.v12Low && latest.v12 >= world.config.v12Floor));
 			rows.push(row('Drive battery', fmt.volts(latest.hvV) + ', ' + fmt.pct(latest.soc), latest.soc > world.config.socFloor));
 		}
-		rows.push(link.heardAt === null ? row('Last heard from the car', 'Never', false)
-			: row('Last heard from the car', fmt.span(Math.max(0, now - link.heardAt)) + ' ago', now - link.heardAt < LINK_FRESH_MS));
+		const vehicleAt = typeof link.vehicleAt === 'number' ? link.vehicleAt : null;
+		rows.push(vehicleAt === null ? row('Last heard from the car', 'Never', null)
+			: row('Last heard from the car', fmt.span(Math.max(0, now - vehicleAt)) + ' ago', now - vehicleAt < LINK_FRESH_MS));
 		rows.push(row('Unreadable messages', String(link.rejected), link.rejected === 0));
 		if (link.lastError) rows.push(row('Last error', link.lastError, false));
 		if (host) {
 			rows.push(row('Autostart', AUTOSTART[host.autostart] || host.autostart, host.autostart === 'allowed' ? true : host.autostart === 'blocked' ? false : null));
 			rows.push(row('Car app', host.version, null));
 		}
-		return { rows: rows, selfTest: host ? host.selfTest : [], killed: Boolean(host && host.killed) };
+		const asked = world.view.killAsked || null;
+		const confirmed = asked !== null && host !== null && host.killed === asked.on;
+		const waiting = asked !== null && !confirmed && now - asked.at < KILL_WAIT_MS;
+		return {
+			rows: rows,
+			selfTest: host ? host.selfTest : [],
+			killed: Boolean(host && host.killed),
+			killStatus: waiting ? WAITING : '',
+			killAlert: asked !== null && !confirmed && !waiting ? KILL_UNANSWERED : null,
+			now: now,
+		};
 	},
 
-	/** Read-only rows and the kill switch, which dispatches kill and shows the car's confirmed state. @param {HTMLElement} root @param {(i: Intent) => void} dispatch */
+	/** Read-only rows and the kill switch, which dispatches kill, records the tap in view state and shows the car's confirmed state. @param {HTMLElement} root @param {(i: Intent) => void} dispatch */
 	mount(root, dispatch) {
 		let killed = false;
+		let now = 0;
 		const status = h('div', { class: 'inset-rows' });
 		const tests = h('div', { class: 'inset-rows' });
 		const testsEmpty = h('p', { class: 'inset-footer' });
-		const kill = toggle(function () { dispatch({ kind: 'kill', on: !killed }); });
+		const killStatus = h('span', { class: 'row-value row-status', hidden: true });
+		const kill = toggle(function () {
+			dispatch({ kind: 'kill', on: !killed });
+			dispatch({ kind: 'view', patch: { killAsked: { on: !killed, at: now } } });
+		});
 		root.appendChild(h('div', { class: 'content' }, [
 			h('section', { class: 'inset' }, [h('h3', { class: 'inset-header' }, ['Status']), status]),
 			h('section', { class: 'inset' }, [h('h3', { class: 'inset-header' }, ['Self test']), tests, testsEmpty]),
@@ -57,6 +77,7 @@ export const diagnostics = {
 				h('h3', { class: 'inset-header' }, ['Kill switch']),
 				h('div', { class: 'inset-rows' }, [h('div', { class: 'row' }, [
 					h('div', { class: 'row-text' }, [h('span', { class: 'row-label' }, ['Stop everything']), h('span', { class: 'row-detail' }, ['Turns sentry, recording and the surround cameras off until you turn this back off. The switch shows what the car has confirmed, so it may take a moment to move.'])]),
+					killStatus,
 					h('div', { class: 'row-control' }, [kill.el]),
 				])]),
 			]),
@@ -83,8 +104,15 @@ export const diagnostics = {
 				syncList(status, m.rows, function (r) { return r.label; }, createStatusRow, updateStatusRow);
 				syncList(tests, m.selfTest, function (t) { return t.name; }, createTestRow, updateTestRow);
 				testsEmpty.textContent = m.selfTest.length ? '' : 'The car has not reported a self test yet.';
+				now = m.now;
 				killed = m.killed;
 				kill.set(m.killed);
+				killStatus.textContent = m.killStatus;
+				killStatus.hidden = !m.killStatus;
+				if (m.killAlert) {
+					showAlert(root.ownerDocument, m.killAlert);
+					dispatch({ kind: 'view', patch: { killAsked: null } });
+				}
 			},
 			hide() {},
 		};
