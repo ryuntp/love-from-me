@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>SealGuard คู่มือผู้ใช้</title>
+<style>
+@font-face { font-family: 'Sarabun'; font-weight: 400; src: url('fonts/Sarabun-400-thai.woff2') format('woff2'); unicode-range: U+0E01-0E5B, U+200C-200D, U+25CC; }
+@font-face { font-family: 'Sarabun'; font-weight: 400; src: url('fonts/Sarabun-400-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Sarabun'; font-weight: 500; src: url('fonts/Sarabun-500-thai.woff2') format('woff2'); unicode-range: U+0E01-0E5B, U+200C-200D, U+25CC; }
+@font-face { font-family: 'Sarabun'; font-weight: 500; src: url('fonts/Sarabun-500-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+2212; }
+@font-face { font-family: 'Sarabun'; font-weight: 700; src: url('fonts/Sarabun-700-thai.woff2') format('woff2'); unicode-range: U+0E01-0E5B, U+200C-200D, U+25CC; }
+@font-face { font-family: 'Sarabun'; font-weight: 700; src: url('fonts/Sarabun-700-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+2000-206F, U+2212; }
+@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+html { font-family: 'Sarabun', sans-serif; font-size: 11.5pt; line-height: 1.55; color: #1c1c1e; }
+body { margin: 0; }
+h1 { font-size: 22pt; margin: 0 0 6pt; line-height: 1.25; }
+h2 { font-size: 16pt; margin: 22pt 0 8pt; padding-top: 6pt; border-top: 2px solid #0a84ff; color: #0a4fb3; page-break-after: avoid; }
+h3 { font-size: 12.5pt; margin: 14pt 0 4pt; page-break-after: avoid; }
+p { margin: 0 0 7pt; }
+ol, ul { margin: 0 0 8pt; padding-left: 20pt; }
+li { margin-bottom: 3pt; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 10.5pt; page-break-inside: avoid; }
+th, td { border: 1px solid #c7c7cc; padding: 4pt 6pt; vertical-align: top; text-align: left; }
+th { background: #f2f2f7; font-weight: 700; }
+code { font-family: 'DejaVu Sans Mono', monospace; font-size: 9.5pt; background: #f2f2f7; padding: 0 3pt; border-radius: 3pt; }
+pre { font-family: 'DejaVu Sans Mono', monospace; font-size: 9pt; background: #f2f2f7; padding: 6pt 8pt; border-radius: 4pt; white-space: pre-wrap; }
+.cover { height: 240mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+.cover h1 { font-size: 34pt; }
+.cover .sub { font-size: 14pt; color: #3a3a3c; margin-bottom: 18pt; }
+.cover .meta { font-size: 11pt; color: #6e6e73; }
+.cover .badge { display: inline-block; background: #0a84ff; color: #fff; padding: 2pt 10pt; border-radius: 12pt; font-weight: 700; margin-bottom: 18pt; }
+.warn { border-left: 4px solid #ff9f0a; background: #fff6e5; padding: 6pt 10pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
+.danger { border-left: 4px solid #ff453a; background: #ffecea; padding: 6pt 10pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
+.note { border-left: 4px solid #0a84ff; background: #eaf3ff; padding: 6pt 10pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
+figure { margin: 8pt 0 12pt; page-break-inside: avoid; }
+figure img { width: 100%; border: 1px solid #c7c7cc; border-radius: 4pt; }
+figure.half { display: flex; flex-wrap: wrap; gap: 4%; }
+figure.half img { width: 48%; }
+figure.half figcaption { width: 100%; }
+figure.portrait { text-align: center; }
+figure.portrait img { width: 44%; }
+figcaption { font-size: 9.5pt; color: #6e6e73; margin-top: 3pt; }
+.toc li { margin-bottom: 2pt; }
+.pb { page-break-before: always; }
+.small { font-size: 9.5pt; color: #6e6e73; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+	<div><span class="badge">SealGuard</span></div>
+	<h1>คู่มือผู้ใช้ SealGuard<br>สำหรับ BYD Seal</h1>
+	<div class="sub">แอปเฝ้ารถตอนจอด กล้องรอบคัน สุขภาพแบต 12V และยาง บนจอรถ ในสไตล์ iOS</div>
+	<div class="meta">
+		เวอร์ชันแอป 0.1.0 (บิลด์ debug)<br>
+		เอกสารฉบับวันที่ 10 ตุลาคม 2026<br>
+		รถเป้าหมาย BYD Seal Premium 2023 สเปกไทย ระบบ DiLink 4.0 (Android 10) จอ 15.6 นิ้ว<br>
+		เฟิร์มแวร์ที่อ้างถึง สาย 13.1.33 รวมบิลด์ปี 2026 (13.1.33.2602030.1)
+	</div>
+</section>
+
+<h2>สารบัญ</h2>
+<ol class="toc">
+	<li>อ่านก่อนเริ่ม</li>
+	<li>ความเข้ากันได้กับรถและเฟิร์มแวร์ 2026</li>
+	<li>ตรวจเวอร์ชันเฟิร์มแวร์และเลือกทางติดตั้ง</li>
+	<li>การติดตั้ง ทาง A โฟลเดอร์ Third Party Apps</li>
+	<li>การติดตั้ง ทาง B สำหรับสาย 13.1.33</li>
+	<li>ตั้งค่าครั้งแรก (onboarding)</li>
+	<li>หน้าจอทั้งหมด</li>
+	<li>การใช้งานประจำวัน</li>
+	<li>ตั้งค่าอ้างอิง</li>
+	<li>ฟีเจอร์เสริมและเกณฑ์ที่ใช้</li>
+	<li>แก้ปัญหา</li>
+	<li>อัปเดตและถอนแอป</li>
+	<li>ทดลองบนคอมพิวเตอร์และบิลด์เอง</li>
+	<li>แหล่งอ้างอิง</li>
+</ol>
+
+<h2>1. อ่านก่อนเริ่ม</h2>
+<p>SealGuard เป็นแอปสำหรับเจ้าของรถ ติดตั้งบนจอกลางของ BYD Seal ให้หน้าจอแบบ iOS สำหรับโหมดเฝ้ารถตอนจอด (sentry) รายการคลิปเหตุการณ์ ภาพกล้องรอบคันสด และฟีเจอร์ที่รถไม่มีมาให้ ได้แก่ สุขภาพแบต 12V ยางรั่วช้า เวลาเฝ้าที่เหลือ time-lapse ตอนจอด และชุดข้อมูลเหตุการณ์ (incident pack)</p>
+<div class="danger">
+	<strong>สถานะของบิลด์นี้</strong> บิลด์ 0.1.0 มีเฉพาะส่วนหน้าจอและตรรกะของแอป ยังไม่มีส่วนเชื่อมต่อกับรถ (vehicle link) เมื่อติดตั้งบนรถ หน้าจอจะขึ้น <strong>No vehicle data</strong> หลังจากเปิดแอป 15 วินาที และหน้า Diagnostics จะบอกว่า Vehicle link ยังไม่มี กล้อง การเฝ้ารถ และฟีเจอร์สุขภาพรถจะเริ่มทำงานจริงเมื่อส่วนนั้นถูกเพิ่มในบิลด์ถัดไป การติดตั้งตอนนี้ใช้เพื่อยืนยันว่าแอปรันบนจอจริงได้ และเพื่อรายงานข้อมูลจอกลับมา
+</div>
+<div class="warn">
+	<strong>คำเตือนเรื่องการรับประกัน</strong> การติดตั้งแอปภายนอกบนจอรถเป็นวิธีที่เจ้าของรถเผยแพร่กันเอง ไม่ใช่วิธีที่ BYD รองรับ คู่มือต้นทางทุกฉบับเตือนว่าอาจกระทบการรับประกันระบบจอ และทาง B ต้องเปลี่ยนเฟิร์มแวร์ของจอ ซึ่งมีความเสี่ยงที่จอจะใช้งานไม่ได้ ตัดสินใจโดยรู้ความเสี่ยงนี้ก่อน
+</div>
+<h3>สิ่งที่ต้องเตรียม</h3>
+<ul>
+	<li>ไฟล์ <code>sealguard-debug.apk</code> (ได้จากแชต หรือบิลด์เองตามบทที่ 13)</li>
+	<li>USB flash drive ขนาด 8 ถึง 32 GB ฟอร์แมต FAT32</li>
+	<li>โทรศัพท์ที่จับคู่ Bluetooth กับรถได้ และเปิด hotspot ได้ (ใช้เฉพาะทาง B)</li>
+	<li>แบตขับเคลื่อนเกิน 30% และเวลาว่างประมาณ 1 ชั่วโมง (ใช้เฉพาะทาง B)</li>
+</ul>
+
+<h2>2. ความเข้ากันได้กับรถและเฟิร์มแวร์ 2026</h2>
+<p>ตารางนี้แยกสิ่งที่ยืนยันแล้วในการทดสอบ ออกจากสิ่งที่ต้องยืนยันบนรถจริง เพื่อไม่ให้เข้าใจผิดว่าทุกอย่างถูกทดสอบบนรถแล้ว</p>
+<table>
+	<tr><th style="width:34%">หัวข้อ</th><th>สถานะ</th></tr>
+	<tr><td>ระบบปฏิบัติการของจอ</td><td>ยืนยันแล้ว แอปตั้งเป้า Android 10 (API 29) ซึ่งเป็นระบบของ DiLink 4.0 ไม่ใช้ Google services ไม่ใช้ AndroidX ไม่ต้องใช้อินเทอร์เน็ต</td></tr>
+	<tr><td>เอนจินเว็บในจอ (WebView)</td><td>ออกแบบให้รันบน Chromium 74 ขึ้นไป ซึ่งเป็นรุ่นต่ำสุดของ Android 10 มีเทสต์ที่ห้ามใช้ไวยากรณ์ใหม่กว่านั้น แต่รุ่น WebView จริงบนจอ Seal ยังไม่ได้อ่านจากรถ</td></tr>
+	<tr><td>ความละเอียดจอ</td><td>ทดสอบที่ 1920x1080 แนวนอน 1080x1920 แนวตั้ง และ 1280x720 แนวนอน ค่าความหนาแน่นพิกเซล (density) ของจอ Seal จริงยังไม่ได้ยืนยัน ถ้าตัวอักษรหรือการ์ดดูผิดขนาด ให้รายงานค่านี้กลับมา</td></tr>
+	<tr><td>เฟิร์มแวร์สาย 13.1.33 (รวมบิลด์ 2026)</td><td>ตัวแอปไม่ผูกกับเวอร์ชันเฟิร์มแวร์ สิ่งที่ผูกคือ <em>วิธีติดตั้ง</em> ดูบทที่ 3</td></tr>
+	<tr><td>การทำงานตอนจอดับ</td><td>ยังไม่ยืนยัน ตรรกะเฝ้ารถรันในหน้าเว็บของแอป ถ้าระบบของรถหยุดหน้าเว็บเมื่อจอดับ ส่วนนี้ต้องย้ายไปฝั่ง native ในบิลด์ถัดไป</td></tr>
+	<tr><td>สตรีมภาพกล้องผ่าน loopback</td><td>แอปอนุญาตเฉพาะ 127.0.0.1 และ localhost ยังไม่ได้ทดสอบบนรถ</td></tr>
+	<tr><td>เกณฑ์แบต 12V</td><td>ใช้ตารางสำหรับแบตลิเธียมไอรอนฟอสเฟต (LFP) ยังไม่ได้วัดกับรถจริง ให้ถือว่าเป็นคำเตือนให้ตรวจ ไม่ใช่คำวินิจฉัย</td></tr>
+</table>
+<div class="note">สรุปสั้น แอปเข้ากับระบบของจอ Seal ทุกบิลด์ในสาย 13.1.33 ตามสเปก สิ่งที่บิลด์ 2026 เปลี่ยนคือรถปิดช่องทางติดตั้งแอปภายนอก และรายงานจากเจ้าของรถบอกว่าบิลด์ 2602 บางเครื่องลดเวอร์ชันลงไม่ได้ อ่านบทที่ 3 ก่อนเสียบ USB</div>
+
+<h2>3. ตรวจเวอร์ชันเฟิร์มแวร์และเลือกทางติดตั้ง</h2>
+<ol>
+	<li>บนจอรถ ไปที่ <strong>Settings</strong> แล้ว <strong>System</strong> แล้ว <strong>Version</strong></li>
+	<li>จดเลขเวอร์ชันทั้งหมด เช่น <code>13.1.33.2602030.1</code></li>
+	<li>เทียบกับตารางนี้</li>
+</ol>
+<table>
+	<tr><th style="width:30%">เวอร์ชันที่เห็น</th><th>ทางที่ใช้ได้</th></tr>
+	<tr><td>13.1.33.2307 หรือเก่ากว่า</td><td>ทาง A (โฟลเดอร์ Third Party Apps) มีรายงานว่าใช้ได้ตรงๆ</td></tr>
+	<tr><td>13.1.33.2310 ถึง 13.1.33.2511</td><td>ทาง A มักถูกปิด ขึ้นข้อความเรื่องความปลอดภัยในการขับขี่ ใช้ทาง B ซึ่งเริ่มจากลดเวอร์ชันลงไป 2404</td></tr>
+	<tr><td>13.1.33.2602030.x (บิลด์ 2026)</td><td>ทาง A ถูกปิด ทาง B ขึ้นกับว่ารถยอมลดเวอร์ชันหรือไม่ มีรายงานจากเจ้าของ Seal U และ Dolphin ว่าเครื่องบน 2602 ปฏิเสธการลดเวอร์ชัน โดยขึ้นว่าห้ามต่ำกว่าเวอร์ชัน FWC ให้ลองขั้นตอน B1 ก่อน ถ้ารถปฏิเสธ ตอนนี้ยังไม่มีวิธีที่เอกสารรองรับ</td></tr>
+	<tr><td>2.3.0 ขึ้นไป</td><td>คู่มือต้นทางระบุว่าอัปเดตนี้ปิดช่องทางทั้งหมด ถ้ายังต้องการติดตั้งแอป อย่าอัปเดตไปรุ่นนี้</td></tr>
+</table>
+<div class="warn">ลองทาง A ก่อนเสมอ เพราะถ้าไม่สำเร็จ รถไม่ได้ถูกเปลี่ยนแปลงอะไร ทาง B เปลี่ยนเฟิร์มแวร์ของจอ ตัดสินใจเมื่อพร้อมและมีเวลา ไม่ใช่หน้าบ้านตอนรีบ</div>
+
+<h2>4. การติดตั้ง ทาง A โฟลเดอร์ Third Party Apps</h2>
+<p>วิธีนี้ใช้ตัวติดตั้งแอปภายนอกที่ฝังอยู่ในระบบของรถ รถจะมองหาโฟลเดอร์ชื่อเฉพาะบน USB ไม่ใช่ไฟล์ APK ที่วางไว้ลอยๆ</p>
+<ol>
+	<li>ฟอร์แมต USB เป็น <strong>FAT32</strong> (บน Windows ไดรฟ์เกิน 32 GB จะไม่มีตัวเลือก FAT32 ให้ใช้ไดรฟ์เล็กกว่านั้น)</li>
+	<li>สร้างโฟลเดอร์ชื่อ <code>Third Party Apps 66</code> ที่ root ของไดรฟ์ ตัวเลขท้ายคือรหัสประเทศ คู่มือต้นทางจากฟิลิปปินส์ใช้ 63 ของไทยคือ 66 ถ้ารถไม่ตอบสนอง ให้ลองชื่อ <code>third party apps</code> ตัวพิมพ์เล็กไม่มีตัวเลข ซึ่งเป็นชื่อที่ใช้กับ Atto 3 รุ่นเก่า</li>
+	<li>คัดลอก <code>sealguard-debug.apk</code> ไปไว้ <strong>ในโฟลเดอร์นั้น</strong></li>
+	<li>ดับรถก่อน แล้วเสียบ USB ที่ <strong>พอร์ต USB ข้อมูลช่องล่าง</strong> ใต้คอนโซลกลาง (ช่องที่ใช้ต่อข้อมูล ไม่ใช่ช่องชาร์จอย่างเดียว)</li>
+	<li>สตาร์ทรถ รอให้จอโหลดเสร็จ</li>
+	<li>ถ้าระบบตรวจพบโฟลเดอร์ จะมีหน้าขอรหัสผ่านขึ้นมา รหัสของตัวติดตั้งนี้อยู่ในคู่มือ Seal 5 ที่อ้างถึงในบทที่ 14 ใส่รหัสแล้วกด OK</li>
+	<li>ติ๊กเลือก APK แล้วกด <strong>Install</strong> มุมขวาล่างจะนับ Success หรือ Failed</li>
+	<li>กด Back หรือ Home ไอคอน SealGuard จะปรากฏในรายการแอป</li>
+</ol>
+<p><strong>ถ้าไม่มีอะไรเกิดขึ้น</strong> หรือมีกล่องข้อความทำนอง "For your driving safety and system stability" แปลว่าเฟิร์มแวร์ของคุณปิดทางนี้ ถอด USB แล้วไปบทที่ 5</p>
+
+<h2 class="pb">5. การติดตั้ง ทาง B สำหรับสาย 13.1.33</h2>
+<p>ทางนี้มาจากคู่มือที่ครอบคลุม Han, Atto 2, Seal, Seal U และ Sealion 5 บนเฟิร์มแวร์สาย 13.1.33 (ฉบับวันที่ 6 กรกฎาคม 2026) ขั้นตอนมี 5 ช่วง ลดเวอร์ชัน เปิดโหมดดีบัก ติดตั้งตัวช่วยติดตั้ง ติดตั้งแอป แล้วอัปเดตกลับ รหัสและเครื่องมือเฉพาะให้ดูจากคู่มือต้นทางโดยตรง เพราะเปลี่ยนได้ตามเวลา</p>
+<div class="danger">ระหว่างอัปเดตเฟิร์มแวร์ ห้ามดับรถ ห้ามถอด USB ห้ามกดปุ่มใดๆ แบตขับเคลื่อนต้องเกิน 30% ถอด SD card ออกจากรถก่อนเริ่ม ถ้าจอค้าง ให้กดแป้นหมุนเสียงค้างไว้เพื่อรีสตาร์ทจอ</div>
+<h3>B1 ลดเวอร์ชันเป็น 13.1.33.2404</h3>
+<ol>
+	<li>ยืนยันว่าเวอร์ชันปัจจุบันขึ้นต้นด้วย 13.1.33</li>
+	<li>ดาวน์โหลดไฟล์เฟิร์มแวร์ 13.1.33.2404 ตามลิงก์ในคู่มือต้นทาง</li>
+	<li>ฟอร์แมต USB 8 ถึง 32 GB เป็น FAT32 (ใหญ่กว่านั้นใช้ exFAT)</li>
+	<li>สร้างโฟลเดอร์ <code>BYDUpdatePackage</code> และข้างในสร้าง <code>msm8953_64</code> วางไฟล์เฟิร์มแวร์ไว้ในนั้น แล้วเปลี่ยนชื่อไฟล์เป็น <code>UpdateFull.zip</code> โครงสร้างโฟลเดอร์นี้ใช้กับแพ็กเกจเฟิร์มแวร์เท่านั้น ไม่เกี่ยวกับ APK</li>
+	<li>เสียบ USB ที่พอร์ตของรถ ถ้ารถมีแต่ USB-C ใช้ตัวแปลง USB-A เป็น USB-C</li>
+	<li>เมื่อจอขึ้น QR code กด <strong>ปุ่ม Back (ลูกศรซ้าย) บนพวงมาลัย</strong> พร้อมกับ <strong>แป้นหมุนเสียง</strong> ค้างไว้ 10 วินาที</li>
+	<li>รอ 10 ถึง 20 นาที เมื่อจอรีบูตเสร็จจึงถอด USB</li>
+	<li><strong>ถ้ารถขึ้นว่าห้ามลดเวอร์ชันต่ำกว่า FWC</strong> หรือแถบความคืบหน้าวิ่งครู่เดียวแล้วรีสตาร์ทกลับเวอร์ชันเดิม แปลว่าเครื่องนี้ถูกล็อกการลดเวอร์ชัน หยุดที่ตรงนี้ ทางนี้ใช้ไม่ได้กับรถคุณ</li>
+</ol>
+<h3>B2 เปิดโหมดดีบัก</h3>
+<ol>
+	<li>จับคู่โทรศัพท์กับรถผ่าน Bluetooth</li>
+	<li>ในแอป Phone ของรถ กดรหัสเมนูบริการตามคู่มือต้นทาง จอจะแสดงตัวเลขของเครื่อง</li>
+	<li>นำตัวเลขนั้นไปสร้างรหัสผ่านด้วยเครื่องมือที่คู่มือต้นทางให้ไว้ แล้วใส่รหัสบนจอ กดปุ่มยืนยัน</li>
+	<li>ในเมนู <strong>Test Tools</strong> เปิด <strong>Wireless adb debug switch</strong> และ <strong>Debug mode when USB is connected</strong></li>
+</ol>
+<h3>B3 ติดตั้งตัวช่วยติดตั้ง (PackageInstallerUnlocker)</h3>
+<ol>
+	<li>เปิด hotspot บนโทรศัพท์ แล้วให้รถเชื่อมต่อ Wi-Fi นั้น จดเลข IP ของรถจากหน้ารายละเอียด Wi-Fi</li>
+	<li>บนโทรศัพท์ เปิดแอป <strong>Bugjaeger</strong> เพิ่มเครื่องด้วย IP ของรถ พอร์ต 5555 แล้วเชื่อมต่อ</li>
+	<li>บนจอรถจะมีหน้าต่างขออนุญาต เลือก <strong>Always allow</strong> แล้ว <strong>Allow</strong> ห้ามกด Revoke USB debugging authorisations เพราะจะล้างสิทธิ์ทั้งหมดทันที</li>
+	<li>ใช้ Bugjaeger ติดตั้ง <code>PackageInstallerUnlocker.apk</code> ตามคู่มือต้นทาง หลังจากนี้ตัวติดตั้งของรถจะยอมรับ APK ตามปกติ</li>
+</ol>
+<h3>B4 ติดตั้ง SealGuard</h3>
+<ol>
+	<li>คัดลอก <code>sealguard-debug.apk</code> ไว้ที่ <strong>root</strong> ของ USB (FAT32 หรือ exFAT) ไม่ต้องมีโฟลเดอร์พิเศษ</li>
+	<li>เสียบ USB เปิดแอป <strong>File Manager</strong> ของรถ เลือกไดรฟ์ USB แตะไฟล์ APK แล้วยืนยันการติดตั้ง</li>
+	<li>อีกทางหนึ่ง ติดตั้งผ่าน Bugjaeger จากโทรศัพท์ได้เช่นกัน</li>
+</ol>
+<h3>B5 อัปเดตกลับ (ทำหรือไม่ก็ได้)</h3>
+<ol>
+	<li>แอปที่ติดตั้งแล้วจะยังอยู่หลังอัปเดต คู่มือต้นทางแนะนำ <strong>13.1.33.2511</strong> ว่าเสถียรที่สุด และเตือนว่า 2602 มีปัญหา GPS ทำให้แอปที่ใช้ตำแหน่งค้าง</li>
+	<li>เตรียม USB แบบเดียวกับ B1 แล้วเลือก <strong>Upgrade OTG</strong> รอประมาณ 15 นาที ไม่กดปุ่มใดๆ</li>
+	<li>อย่าอัปเดตเป็น 2.3.0 ถ้ายังต้องการติดตั้งแอปเพิ่มในอนาคต</li>
+</ol>
+
+<h2>6. ตั้งค่าครั้งแรก (onboarding)</h2>
+<p>เปิด SealGuard ครั้งแรกจะพบหน้าแนะนำ 4 หน้า ทำให้ครบ มิฉะนั้นแอปจะกลับมาหน้านี้ทุกครั้งที่เปิด</p>
+<ol>
+	<li><strong>sentry ทำอะไร</strong> อ่านแล้วกดถัดไป</li>
+	<li><strong>เริ่มอัตโนมัติ</strong> กด <strong>Open car settings</strong> แล้วเปิดสิทธิ์ให้ SealGuard เริ่มทำงานเองในตั้งค่าของรถ รถจะปิดสิทธิ์นี้ให้ใหม่ทุกครั้งที่ติดตั้งแอป ทำซ้ำหลังอัปเดตทุกครั้ง หน้านี้จะแสดงค่าที่รถรายงาน (Allowed, Blocked หรือ Unknown)</li>
+	<li><strong>กฎการ arm</strong> เลือก When locked (ค่าเริ่ม), When parked หรือ Manually</li>
+	<li><strong>เสร็จ</strong> กด Done แอปไปหน้า Dashboard</li>
+</ol>
+<figure class="portrait"><img src="../../build/screens/onboarding-portrait-dark.png" alt="onboarding"><figcaption>หน้า onboarding แนวตั้ง</figcaption></figure>
+<p>หลังจากนั้นเปิดหน้า <strong>Diagnostics</strong> ครั้งหนึ่ง เพื่อดูว่ารถรายงานกล้อง ไฟ และแรงดันหรือไม่ บิลด์นี้จะขึ้น Vehicle link ไม่ผ่าน ซึ่งเป็นสิ่งที่คาดไว้</p>
+
+<h2 class="pb">7. หน้าจอทั้งหมด</h2>
+<p>แนวนอนมีเมนูด้านซ้าย 6 รายการ แนวตั้งเมนูอยู่แถบล่าง ธีมมืดเป็นค่าเริ่ม ธีมสว่างตามจอรถหรือเลือกเองใน Settings ปุ่มและแถวทุกอันสูงอย่างน้อย 72 พิกเซล ตัวอักษรไม่เล็กกว่า 20 พิกเซล เพื่อกดจากระยะเอื้อมมือ</p>
+<h3>Dashboard</h3>
+<figure><img src="../../build/screens/dashboard-landscape-dark.png" alt="dashboard"><figcaption>Dashboard ขณะ armed สีเขียว</figcaption></figure>
+<ul>
+	<li><strong>การ์ดสถานะ</strong> สีบอกสถานะ เขียว armed ส้ม recording แดง stopped เทา idle หรือขณะขับ ข้อความใต้ชื่อบอกเหตุผล เช่น "12V at 12.39 V, under the 12.4 V floor"</li>
+	<li><strong>Armed for</strong> เวลาที่เฝ้ามาแล้ว <strong>12V battery</strong> แรงดันล่าสุด <strong>Runtime left</strong> เวลาเฝ้าที่เหลือก่อนถึง floor พร้อมเหตุผลใต้ตัวเลข <strong>Time-lapse</strong> ช่วงถ่ายภาพ หรือ Off, Stopped</li>
+	<li><strong>ภาพกล้อง 4 ช่อง</strong> แตะเพื่อไปหน้า Cameras</li>
+	<li><strong>ปุ่ม Arm หรือ Disarm</strong> ปิดการใช้งานเมื่อ arm ไม่ได้ เช่น ขณะขับ</li>
+	<li><strong>3 การ์ดล่าง</strong> แบต 12V ยาง และเหตุการณ์ล่าสุด แตะเพื่อไปหน้าที่เกี่ยวข้อง</li>
+	<li><strong>แถบแดง</strong> จะขึ้นเมื่อ kill switch เปิดอยู่</li>
+</ul>
+<figure class="half"><img src="../../build/screens/recording-dashboard-landscape-dark.png" alt="recording"><img src="../../build/screens/halted-dashboard-landscape-dark.png" alt="halted"><figcaption>ซ้าย ขณะอัดคลิป ขวา หยุดเพื่อรักษาแบต</figcaption></figure>
+<figure class="portrait"><img src="../../build/screens/dashboard-portrait-dark.png" alt="dashboard portrait"><figcaption>Dashboard แนวตั้ง เมนูย้ายไปแถบล่าง</figcaption></figure>
+<h3>Events</h3>
+<figure><img src="../../build/screens/events-landscape-dark.png" alt="events"><figcaption>รายการเหตุการณ์แยกตามวัน</figcaption></figure>
+<ul>
+	<li>ตัวกรองด้านบน All, Motion, Impact</li>
+	<li>แต่ละแถวมีภาพย่อ เวลา ชนิดเหตุการณ์ กล้องที่เกี่ยวข้อง และความยาว</li>
+	<li>แตะแถวเพื่อเปิดแผ่นรายละเอียด เล่นคลิป 4 กล้อง แตะช่องเพื่อขยาย ปุ่ม <strong>Export incident pack</strong> ส่งออกคลิปพร้อมข้อมูลรถรอบเหตุการณ์ ปุ่ม <strong>Delete</strong> สีแดง จะถามยืนยันก่อนลบ</li>
+	<li>ปุ่ม Back ของรถปิดแผ่นรายละเอียด</li>
+</ul>
+<figure><img src="../../build/screens/event-sheet-landscape-dark.png" alt="event sheet"><figcaption>แผ่นรายละเอียดเหตุการณ์</figcaption></figure>
+<h3>Cameras</h3>
+<figure><img src="../../build/screens/cameras-landscape-dark.png" alt="cameras"><figcaption>กล้องรอบคัน 4 ช่อง พร้อมป้ายชื่อและ fps</figcaption></figure>
+<p>แตะช่องใดเพื่อขยายช่องนั้น แตะอีกครั้งเพื่อกลับ กล้องที่รถไม่รายงานจะขึ้น Offline ในช่องของมัน ขณะขับภาพสดจะปิด</p>
+<h3>Car</h3>
+<figure><img src="../../build/screens/car-landscape-light.png" alt="car"><figcaption>หน้า Car ธีมสว่าง</figcaption></figure>
+<ul>
+	<li><strong>12V battery</strong> คำตัดสิน Healthy, Weakening, Replace soon หรือ Still learning พร้อมเหตุผล และกราฟแรงดันพักของแต่ละคืน</li>
+	<li><strong>Tyres</strong> แรงดันทั้ง 4 ล้อ แนวโน้มต่อสัปดาห์ ล้อที่รั่วช้าจะมีแถบแดงและคำว่า Losing air</li>
+	<li><strong>Charging</strong> สถานะแบตขับเคลื่อนและการชาร์จ</li>
+</ul>
+<h3>Settings</h3>
+<figure class="portrait"><img src="../../build/screens/settings-portrait-light.png" alt="settings"><figcaption>Settings แนวตั้ง ธีมสว่าง</figcaption></figure>
+<p>รายการแบบกลุ่มตามสไตล์ iOS ทุกค่าบันทึกทันทีที่เปลี่ยน รายละเอียดแต่ละค่าดูบทที่ 9</p>
+<h3>Diagnostics</h3>
+<figure><img src="../../build/screens/diagnostics-landscape-dark.png" alt="diagnostics"><figcaption>Diagnostics</figcaption></figure>
+<ul>
+	<li>กล้องแต่ละตัวพร้อม fps สถานะไฟ แรงดัน 12V แรงดันและเปอร์เซ็นต์แบตขับเคลื่อน</li>
+	<li><strong>Last heard from the car</strong> เวลาที่ได้รับข้อมูลรถล่าสุด ขึ้น Never ถ้ายังไม่มีข้อมูล</li>
+	<li><strong>Unreadable messages</strong> จำนวนข้อความจากระบบรถที่แอปอ่านไม่ได้</li>
+	<li><strong>Self-test</strong> รายการตรวจของระบบ พร้อมผล</li>
+	<li><strong>Kill switch</strong> ปิดการเฝ้ารถ กล้อง และงานเบื้องหลังทั้งหมด จะขึ้น Waiting for the car จนกว่ารถจะยืนยัน ถ้าไม่ยืนยันใน 10 วินาที แอปจะแจ้งเตือน</li>
+</ul>
+<h3>หน้าจอกลางคืน</h3>
+<p>เมื่อรถจอดและไม่มีใครแตะจอ 30 วินาที แอปจะเปลี่ยนเป็นพื้นดำเกือบสนิท มีไอคอนโล่เล็กๆ สีตามสถานะ เขียว ส้ม หรือแดง เพื่อไม่ให้แสงจอส่องห้องโดยสาร แตะที่ใดก็ได้เพื่อกลับหน้าปกติ</p>
+
+<h2 class="pb">8. การใช้งานประจำวัน</h2>
+<table>
+	<tr><th style="width:28%">สถานการณ์</th><th>แอปทำอะไร</th></tr>
+	<tr><td>ดับรถแล้วล็อก</td><td>กฎ When locked จะ arm ทันทีที่ล็อก กฎ When parked จะ arm หลังดับรถ 60 วินาทีไม่ว่าจะล็อกหรือไม่ กฎ Manually รอให้กด Arm</td></tr>
+	<tr><td>มีคนหรือรถเข้าใกล้</td><td>ถ้าความแรงของการเคลื่อนไหวเกินค่าความไว แอปเริ่มอัดคลิปพร้อมภาพย้อนหลัง (pre-roll) และแจ้งเตือนบนจอ การชนเริ่มอัดทันทีทุกความไว</td></tr>
+	<tr><td>เหตุการณ์จบ</td><td>คลิปปิดเมื่อเงียบ 10 วินาที หรืออัดครบ 5 นาที แล้วบันทึกเป็นเหตุการณ์พร้อมชุดข้อมูลรถ</td></tr>
+	<tr><td>แบต 12V ต่ำกว่า floor</td><td>ต้องต่ำต่อเนื่อง 30 วินาทีจึงจะหยุด เพื่อไม่ให้แรงดันตกชั่วครู่ (เช่น ตอนมอเตอร์ประตูทำงาน) ปิดการเฝ้าทั้งคืน ถ้ารถส่งสัญญาณ 12V LOW เอง แอปหยุดทันที</td></tr>
+	<tr><td>แบตขับเคลื่อนถึง floor</td><td>หยุดเฝ้าเช่นกัน เพื่อให้เหลือไฟขับกลับบ้าน ขณะชาร์จจะไม่หยุด</td></tr>
+	<tr><td>หยุดแล้วจะกลับมาเฝ้าเมื่อไร</td><td>เมื่อขับออกแล้วจอดใหม่ เมื่อเริ่มชาร์จ หรือเมื่อแก้ค่า floor แล้วค่าล่าสุดพ้น floor ใหม่อย่างน้อย 0.1 V หรือ 2%</td></tr>
+	<tr><td>ปลดล็อกรถ (กฎ When locked)</td><td>กลับเป็น idle และปิดคลิปที่เปิดอยู่</td></tr>
+	<tr><td>ขับออก</td><td>ปิดการเฝ้าและกล้องเอง ไม่มีทาง arm ได้ขณะรถเปิดอยู่</td></tr>
+	<tr><td>กด Disarm</td><td>idle จนกว่าจะล็อกรถครั้งใหม่หรือกด Arm</td></tr>
+	<tr><td>ฉุกเฉิน</td><td>เปิด kill switch ใน Diagnostics ปิดทุกอย่าง แม้หน้าแอปจะค้าง เพราะฝั่งรถเป็นผู้จำค่านี้</td></tr>
+</table>
+
+<h2>9. ตั้งค่าอ้างอิง</h2>
+<table>
+	<tr><th>กลุ่ม</th><th>ค่า</th><th>ตัวเลือก</th><th>ค่าเริ่ม</th><th>ความหมาย</th></tr>
+	<tr><td>Sentry</td><td>Arm sentry</td><td>When locked, When parked, Manually</td><td>When locked</td><td>กฎการเริ่มเฝ้า</td></tr>
+	<tr><td>Sentry</td><td>Sensitivity</td><td>Low, Medium, High</td><td>Medium</td><td>ความแรงของการเคลื่อนไหวที่เริ่มอัด Low 0.8, Medium 0.5, High 0.25 จากคะแนน 0 ถึง 1</td></tr>
+	<tr><td>Sentry</td><td>Pre-roll</td><td>0, 5, 10, 15 s</td><td>10 s</td><td>วิดีโอย้อนหลังก่อนเหตุการณ์</td></tr>
+	<tr><td>Sentry</td><td>Deterrent flash</td><td>เปิด, ปิด</td><td>ปิด</td><td>กะพริบไฟเมื่อเริ่มอัด ปิดไว้ก่อนเพื่อไม่รบกวนเพื่อนบ้าน</td></tr>
+	<tr><td>Power</td><td>Drive battery floor</td><td>10 ถึง 50% ทีละ 5</td><td>20%</td><td>หยุดเฝ้าเมื่อแบตขับเคลื่อนถึงค่านี้</td></tr>
+	<tr><td>Power</td><td>12V floor</td><td>11.8 ถึง 13.0 V ทีละ 0.1</td><td>12.4 V</td><td>หยุดเฝ้าเมื่อ 12V ต่ำกว่านี้ต่อเนื่อง 30 วินาที</td></tr>
+	<tr><td>Recording</td><td>Keep events for</td><td>3, 7, 14, 30 วัน</td><td>14 วัน</td><td>ลบเหตุการณ์เก่ากว่านี้ เปลี่ยนค่าจะถามยืนยันถ้ามีเหตุการณ์ที่จะถูกลบ</td></tr>
+	<tr><td>Recording</td><td>Parking time-lapse</td><td>เปิด, ปิด</td><td>เปิด</td><td>คลิปสั้น 1 คลิปต่อการจอด 1 ครั้ง</td></tr>
+	<tr><td>Appearance</td><td>Appearance</td><td>Auto, Dark, Light</td><td>Auto</td><td>Auto ตามโหมดกลางวันกลางคืนของจอรถ</td></tr>
+	<tr><td>Appearance</td><td>Reduce motion</td><td>เปิด, ปิด</td><td>ปิด</td><td>ปิดแอนิเมชันทั้งหมด</td></tr>
+</table>
+<p class="small">ค่าทั้งหมดเก็บในแอปด้วยการเขียนครั้งเดียวต่อการเปลี่ยน ถ้ารถดับกลางคัน ค่าจะเป็นค่าเก่าหรือค่าใหม่ทั้งชุด ไม่มีทางได้ค่าครึ่งๆ กลางๆ</p>
+
+<h2>10. ฟีเจอร์เสริมและเกณฑ์ที่ใช้</h2>
+<h3>สุขภาพแบต 12V</h3>
+<p>ใช้ 3 สัญญาณ แรงดันพักตอนกลางคืน (วัดหลังจอดอย่างน้อย 2 ชั่วโมงและไม่ได้ชาร์จ) แนวโน้มของแรงดันพักหลายคืน และแรงดันตกตอนรถตื่น ตารางเกณฑ์สำหรับแบต LFP ของ Seal</p>
+<table>
+	<tr><th>สัญญาณ</th><th>Healthy</th><th>Weakening</th><th>Replace soon</th></tr>
+	<tr><td>แรงดันพัก</td><td>13.0 V ขึ้นไป</td><td>12.7 ถึง 13.0 V</td><td>ต่ำกว่า 12.7 V</td></tr>
+	<tr><td>แรงดันตกตอนตื่น</td><td>ไม่เกิน 0.6 V</td><td>เกิน 0.6 V</td><td>เกิน 1.2 V</td></tr>
+	<tr><td>แนวโน้มหลายคืน</td><td>คงที่</td><td>ตกเร็วกว่า 15 mV ต่อวัน (อย่างน้อย 5 คืน)</td><td></td></tr>
+</table>
+<p>ต้องมีข้อมูลอย่างน้อย 3 คืนก่อนตัดสิน ก่อนหน้านั้นขึ้น Still learning เหตุผลที่แสดงจะบอกว่าสัญญาณใดเป็นตัวตัดสิน</p>
+<h3>ยางรั่วช้า</h3>
+<p>อ่านแรงดันยางตอนเย็นแล้ว (จอดอย่างน้อย 2 ชั่วโมง) ปรับเป็นค่าที่ 20°C ตามกฎแก๊ส แล้วหาแนวโน้มของค่ากลางรายวันย้อนหลังไม่เกิน 21 วัน ล้อที่ลดเร็วกว่า 0.7 kPa ต่อวัน และเร็วกว่าล้ออื่นอย่างน้อย 0.5 kPa ต่อวัน จะขึ้น Losing air ถ้าทั้ง 4 ล้อลดพร้อมกันในอัตรานั้น จะขึ้นเตือนให้ตรวจลมทั้งชุด ต้องมีข้อมูลอย่างน้อย 5 วัน</p>
+<h3>เวลาเฝ้าที่เหลือ (runtime budget)</h3>
+<p>วัดอัตราการลดของแบตขับเคลื่อนจากการจอดครั้งนี้เมื่อมีข้อมูลเกิน 30 นาที และวัดอัตรา 12V เมื่อจอดเกิน 2 ชั่วโมง (เพื่อข้ามช่วงแรงดันผิวหลังดับรถ) ก่อนหน้านั้นใช้ค่ากลางจากการจอด 7 ครั้งล่าสุด และถ้าไม่มีเลยใช้ค่าสมมติ 0.3% ต่อชั่วโมง โดยบอกไว้ใต้ตัวเลขว่ามาจากอะไร เวลาที่แสดงคือเวลาที่น้อยกว่าระหว่างถึง floor แบตขับเคลื่อนกับถึง floor 12V</p>
+<h3>Time-lapse ตอนจอด</h3>
+<p>ถ่ายภาพเป็นระยะตลอดการจอด 1 คลิปต่อการจอด 1 ครั้ง ช่วงเวลาเลือกจากขั้น 10, 20, 30, 60, 120, 300 วินาที ให้ได้ไม่เกิน 900 เฟรมในเวลาเฝ้าที่เหลือ ปิดเองเมื่อเวลาเหลือต่ำกว่า 2 ชั่วโมง หรือขณะชาร์จ ช่วงเวลาจะไม่เปลี่ยนไปมาเพราะตัวเลขขยับเล็กน้อย</p>
+<h3>ชุดข้อมูลเหตุการณ์ (incident pack)</h3>
+<p>เมื่อคลิปปิด แอปรวมข้อมูลรถตั้งแต่ก่อนเหตุการณ์ (ตาม pre-roll) จนจบ เช่น ไฟ ล็อก แรงดัน เปอร์เซ็นต์แบต ยาง เป็นไฟล์ JSON แนบกับเหตุการณ์ กด Export ในหน้าเหตุการณ์เพื่อให้รถส่งออก</p>
+
+<h2 class="pb">11. แก้ปัญหา</h2>
+<table>
+	<tr><th style="width:34%">อาการ</th><th>สาเหตุและวิธีแก้</th></tr>
+	<tr><td>No vehicle data และ Arm กดไม่ได้</td><td>บิลด์นี้ยังไม่มี vehicle link เป็นอาการที่คาดไว้ หน้า Diagnostics จะบอกชื่อ self-test ที่ไม่ผ่าน รอบิลด์ถัดไป</td></tr>
+	<tr><td>เสียบ USB แล้วไม่มีอะไรขึ้น (ทาง A)</td><td>ตรวจว่าเป็นพอร์ตข้อมูลช่องล่าง ไดรฟ์เป็น FAT32 โฟลเดอร์ชื่อถูกต้องและ APK อยู่ในโฟลเดอร์ ลองชื่อโฟลเดอร์แบบที่สอง ถ้ายังไม่ขึ้น เฟิร์มแวร์ปิดทางนี้</td></tr>
+	<tr><td>ขึ้นข้อความเรื่องความปลอดภัยในการขับขี่</td><td>เฟิร์มแวร์บล็อกการติดตั้ง ใช้ทาง B</td></tr>
+	<tr><td>ลดเวอร์ชันไม่ได้ ขึ้นว่าห้ามต่ำกว่า FWC</td><td>เครื่องถูกล็อกการลดเวอร์ชัน (พบในบิลด์ 2602) ยังไม่มีวิธีที่เอกสารรองรับ ติดตามคู่มือต้นทางหรือกลุ่มเจ้าของรถ</td></tr>
+	<tr><td>ติดตั้งขึ้น Failed</td><td>ไฟล์ APK เสีย หรือระบบไม่รองรับ ดาวน์โหลดใหม่และตรวจขนาดไฟล์ (บิลด์นี้ประมาณ 920 KB)</td></tr>
+	<tr><td>แอปไม่เริ่มเองหลังสตาร์ทรถ</td><td>รถปิดสิทธิ์เริ่มอัตโนมัติหลังติดตั้ง ทำ onboarding หน้า 2 ใหม่ หรือเปิดสิทธิ์ในตั้งค่ารถ</td></tr>
+	<tr><td>ขึ้น Stopped to protect the battery ซ้ำทุกคืน</td><td>แบต 12V อ่อน หรือ floor ตั้งสูงไป ดูหน้า Car ถ้า Weakening หรือ Replace soon ให้ตรวจแบตที่ศูนย์ ถ้าแบตปกติให้ลด 12V floor ทีละ 0.1 V</td></tr>
+	<tr><td>ธีมไม่เปลี่ยนตามจอรถ</td><td>ตั้ง Appearance เป็น Auto แอปรับสัญญาณกลางวันกลางคืนจากรถ ถ้ายังไม่เปลี่ยน เลือก Dark หรือ Light เอง</td></tr>
+	<tr><td>ตัวอักษรหรือการ์ดใหญ่หรือเล็กผิดปกติ</td><td>ความหนาแน่นพิกเซลของจอต่างจากที่ทดสอบ ถ่ายรูปหน้าจอและรายงานค่า Version ของรถ</td></tr>
+	<tr><td>Kill switch ขึ้น Waiting for the car ค้าง</td><td>รถไม่ตอบสนอง หลัง 10 วินาทีแอปจะแจ้งเตือน ในบิลด์นี้รถยังไม่รับคำสั่งนี้</td></tr>
+	<tr><td>Unreadable messages นับเพิ่มเรื่อยๆ</td><td>ข้อความจากระบบรถผิดรูปแบบ หรือเวลาของรถคลาดจากเวลาของจอเกิน 5 นาที ตรวจเวลาของรถ</td></tr>
+	<tr><td>ตั้งค่าและประวัติหายหลังอัปเดตแอป</td><td>อัปเดตด้วยคีย์คนละชุด ทำให้ต้องถอนแอปก่อน ดูบทที่ 12</td></tr>
+	<tr><td>จอรถค้าง</td><td>กดแป้นหมุนเสียงค้างไว้เพื่อรีสตาร์ทจอ ถ้าต้องการลบแอปทั้งหมด ใช้ Settings ของรถ, DiLink, Software, Reset, Reset to Factory Settings</td></tr>
+</table>
+
+<h2>12. อัปเดตและถอนแอป</h2>
+<ul>
+	<li>อัปเดตต้องติดตั้ง APK ที่ <strong>เซ็นด้วยคีย์เดิม</strong> ทับได้เลย ตั้งค่าและประวัติอยู่ครบ</li>
+	<li>APK ที่เซ็นด้วยคีย์อื่นจะติดตั้งทับไม่ได้ ต้องถอน SealGuard ก่อน ซึ่งจะลบตั้งค่าและประวัติทั้งหมด ถ้าบิลด์เอง เก็บไฟล์ <code>~/.cache/sealguard-toolchain/debug.keystore</code> ไว้ หรือใช้ตัวแปร release ใน <code>tools/build-apk.sh</code></li>
+	<li>หลังอัปเดตทุกครั้ง เปิดสิทธิ์เริ่มอัตโนมัติในตั้งค่ารถใหม่</li>
+	<li>ถอนแอปได้จากรายการแอปของรถตามปกติ</li>
+</ul>
+
+<h2>13. ทดลองบนคอมพิวเตอร์และบิลด์เอง</h2>
+<p>หน้าจอทั้งหมดเปิดในเบราว์เซอร์บนคอมพิวเตอร์ได้ โดยใช้ข้อมูลจำลอง มีป้าย Demo data กำกับ</p>
+<pre>git clone https://github.com/ryuntp/love-from-me
+git checkout claude/gracious-mayer-ddszx3
+chromium --allow-file-access-from-files "sealguard/app/assets/ui/index.html?scenario=prowler&amp;speed=60#/dashboard"</pre>
+<p>ฉากจำลอง <code>night</code> แบต 12V อ่อนจนหยุดเฝ้า <code>prowler</code> มีคนเดินวน เกิดการอัด <code>leak</code> ยางหลังซ้ายรั่วช้า <code>healthy</code> ปกติ <code>charging</code> กำลังชาร์จ ค่า <code>speed</code> คือวินาทีจำลองต่อวินาทีจริง</p>
+<p>บิลด์ APK และรันเทสต์ (ต้องมี Linux ที่ติดตั้ง Java 21, node 22 และ Playwright)</p>
+<pre>sealguard/tools/bootstrap-toolchain.sh
+sealguard/tools/run-tests.sh
+sealguard/tools/build-apk.sh        # ได้ sealguard/build/sealguard-debug.apk
+sealguard/tools/screenshot-ui.sh    # ภาพหน้าจอทุกหน้าทุกสถานะใน sealguard/build/screens/</pre>
+
+<h2>14. แหล่งอ้างอิง</h2>
+<p>วิธีติดตั้งในบทที่ 3 ถึง 5 สรุปจากคู่มือที่เจ้าของรถเผยแพร่ ไม่ใช่เอกสารของ BYD เวอร์ชันเฟิร์มแวร์และรหัสอาจเปลี่ยนได้ ตรวจกับต้นทางก่อนทำทุกครั้ง</p>
+<ul>
+	<li>คู่มือติดตั้งแอปภายนอกสำหรับสาย 13.1.33 ครอบคลุม Seal (ฉบับ 6 ก.ค. 2026) <code>github.com/DeBondor/byd-unlocking-guide</code></li>
+	<li>วิธีโฟลเดอร์ Third Party Apps บน Seal 5 <code>github.com/rexmtorres/Seal-5-3rd-Party-App-Installation</code></li>
+	<li>บันทึกของเจ้าของ Seal U เรื่องบิลด์ 2602 และ 2.3.0 <code>github.com/redeyejedi31/BYDadbunlocking</code></li>
+	<li>กระทู้รวมของ XDA เรื่องติดตั้ง APK บนจอ BYD <code>xdaforums.com/t/byd-multimedia-install-apk.4541247/</code></li>
+	<li>โค้ดของแอปและเอกสารออกแบบ <code>github.com/ryuntp/love-from-me</code> สาขา <code>claude/gracious-mayer-ddszx3</code> โฟลเดอร์ <code>sealguard/</code></li>
+</ul>
+<p class="small">ตัวอักษร Sarabun ภายใต้ SIL Open Font License</p>
+
+</body>
+</html>

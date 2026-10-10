@@ -11,6 +11,7 @@ tools/bootstrap-toolchain.sh   # once; installs aapt2, apksigner, zipalign, dx, 
 tools/run-tests.sh             # node --test over ui-tests/, then JUnit over app/src/test when it exists
 tools/build-apk.sh             # build/sealguard-debug.apk, signed with a debug key
 tools/screenshot-ui.sh         # every screen at 1920x1080, 1080x1920 and 1280x720, dark and light, plus the halted, recording, killed and sheet states, into build/screens/
+tools/build-manual.sh          # the Thai owner manual, docs/manual/manual-th.html, to build/manual/SealGuard-manual-th.pdf; run the screenshots first
 ```
 
 The page runs in a desktop browser too:
